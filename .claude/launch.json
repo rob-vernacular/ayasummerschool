@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ayasummerschool",
+      "runtimeExecutable": "/Users/BOCK_RB/.nvm/versions/node/v18.20.8/bin/node",
+      "runtimeArgs": ["/Users/BOCK_RB/.nvm/versions/node/v18.20.8/lib/node_modules/npm/bin/npm-cli.js", "run", "dev"],
+      "env": {
+        "PATH": "/Users/BOCK_RB/.nvm/versions/node/v18.20.8/bin:/usr/bin:/bin"
+      },
+      "port": 5173,
+      "autoPort": true
+    }
+  ]
+}

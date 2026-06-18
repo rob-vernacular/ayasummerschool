@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /opt/homebrew/bin/ | grep -E 'node|npm' && ls /usr/local/bin/ | grep -E 'node|npm' 2>/dev/null; ls $HOME/.nvm 2>/dev/null | head -3; ls $HOME/.volta 2>/dev/null | head -3)",
+      "Bash(zsh -l -c 'which node && node --version && which npm && npm --version')",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}

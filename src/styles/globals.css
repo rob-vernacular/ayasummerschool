@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-ocean:    #1B6CA8;
+    --color-sky:      #4FC3F7;
+    --color-sand:     #FFF8E7;
+    --color-coral:    #FF6B6B;
+    --color-gold:     #FFD700;
+    --color-grass:    #56C271;
+    --color-midnight: #0D1B2A;
+    --color-cloud:    #FFFFFF;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  html {
+    font-size: 18px;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background-color: var(--color-sand);
+    color: var(--color-midnight);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Prevent context menus on interactive elements */
+  button, [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+
+  /* Focus visible styles */
+  :focus-visible {
+    outline: 3px solid var(--color-ocean);
+    outline-offset: 2px;
+  }
+
+  /* Remove number input spinners */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+}
+
+@layer components {
+  .font-fredoka { font-family: 'Fredoka One', cursive; }
+  .font-nunito  { font-family: 'Nunito', sans-serif; }
+
+  /* Touch-friendly minimum tap targets */
+  .btn-primary {
+    @apply min-h-[56px] px-6 rounded-2xl font-fredoka text-xl bg-ocean text-white
+           shadow-lg active:scale-95 transition-transform;
+  }
+
+  .btn-secondary {
+    @apply min-h-[56px] px-6 rounded-2xl font-fredoka text-xl bg-white border-2 border-ocean
+           text-ocean active:scale-95 transition-transform;
+  }
+
+  /* Card base */
+  .card {
+    @apply bg-white rounded-3xl p-5 shadow-md;
+  }
+}
+
+@layer utilities {
+  .border-3 { border-width: 3px; }
+
+  /* Reduce motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
