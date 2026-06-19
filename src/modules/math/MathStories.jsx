@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
 import { useSound } from '../../hooks/useSound'
-import { useNavigate } from 'react-router-dom'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
@@ -18,7 +18,6 @@ const PROBLEMS = [
 ]
 
 export default function MathStories({ onComplete }) {
-  const navigate = useNavigate()
   const [problems] = useState(() => shuffle(PROBLEMS).slice(0, 6))
   const [idx, setIdx] = useState(0)
   const [selected, setSelected] = useState(null)
@@ -49,65 +48,52 @@ export default function MathStories({ onComplete }) {
   if (done) {
     const pct = Math.round((score / problems.length) * 100)
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gold/20 to-yellow-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-yellow-700 mt-4">Math Story Hero!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">{score}/{problems.length} solved!</p>
-        <motion.button className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl"
-          whileTap={{ scale: 0.95 }} onClick={() => onComplete(pct, pct === 100)}>
-          Collect {pct === 100 ? 55 : 40} XP! ⭐
-        </motion.button>
-      </div>
+      <CompletionScreen subject="math" title="Math Story Hero!" score={score} total={problems.length}
+        perfect={pct === 100} xp={pct === 100 ? 55 : 40} buttonLabel={`Collect ${pct === 100 ? 55 : 40} XP!`}
+        onCollect={() => onComplete(pct, pct === 100)} />
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gold/20 to-yellow-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-gold/30 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/math')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Math Stories</div>
-        <div className="font-nunito text-sm text-midnight/60">{idx + 1} / {problems.length}</div>
-      </div>
+    <ActivityScene
+      subject="math" title="Math Stories" backRoute="/learn/math"
+      current={idx} total={problems.length}
+      stitchPose={stitchPose} stitchSize={84}
+      message="Solve the word problem with Stitch!">
 
-      <div className="flex-1 flex flex-col items-center p-6 gap-5">
-        <Stitch pose={stitchPose} size={80} />
-        <motion.div
-          key={idx}
-          className="bg-white rounded-3xl p-6 shadow-xl w-full max-w-sm"
-          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-        >
-          <div className="text-5xl text-center mb-4">{p.emoji}</div>
-          <p className="font-nunito text-xl text-midnight leading-relaxed text-center" style={{ lineHeight: 1.7 }}>
-            {p.story}
-          </p>
-          {/* Visual counters */}
+      <div className="flex flex-col items-center gap-5 max-w-sm mx-auto">
+        <motion.div key={idx}
+          className="rounded-3xl p-6 w-full shadow-card"
+          style={{ background: 'linear-gradient(160deg,#FFFDF2,#FDF0CC)', border: '2px solid #E3D08C' }}
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+          <div className="text-5xl text-center mb-3">{p.emoji}</div>
+          <p className="instruction-text text-midnight text-center" style={{ lineHeight: 1.7 }}>{p.story}</p>
           <div className="flex flex-wrap gap-1 justify-center mt-3">
             {Array.from({ length: Math.min(p.a, 10) }).map((_, i) => <span key={`a-${i}`} className="text-xl">{p.emoji}</span>)}
-            {p.op === '-' && <span className="font-fredoka text-2xl text-coral mx-2">−</span>}
-            {p.op === '+' && <span className="font-fredoka text-2xl text-grass mx-2">+</span>}
+            {p.op === '-' && <span className="font-fredoka text-2xl text-coral-dark mx-2">−</span>}
+            {p.op === '+' && <span className="font-fredoka text-2xl text-grass-dark mx-2">+</span>}
             {Array.from({ length: Math.min(p.b, 10) }).map((_, i) => (
               <span key={`b-${i}`} className={`text-xl ${p.op === '-' ? 'opacity-40' : ''}`}>{p.emoji}</span>
             ))}
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
+        <div className="grid grid-cols-3 gap-3 w-full">
           {shuffle(options).map((opt, i) => {
             const isSel = selected === opt
             const isCorrect = opt === p.answer
-            let cls = 'bg-white border-2 border-gray-200 text-midnight'
-            if (isSel) cls = isCorrect ? 'bg-grass/20 border-grass text-grass' : 'bg-coral/20 border-coral text-coral'
+            let bg = 'rgba(255,255,255,0.85)', text = '#16202B', ring = 'transparent'
+            if (isSel && isCorrect) { bg = '#56C271'; text = '#fff'; ring = '#fff' }
+            if (isSel && !isCorrect) { bg = '#FF6B6B'; text = '#fff'; ring = '#fff' }
             return (
               <motion.button key={i}
-                className={`font-fredoka text-3xl py-6 rounded-2xl shadow-sm ${cls}`}
-                whileTap={{ scale: selected ? 1 : 0.9 }}
-                onClick={() => handleAnswer(opt)}
-              >{opt}</motion.button>
+                className="font-fredoka text-3xl py-6 rounded-2xl shadow-card border-2"
+                style={{ background: bg, color: text, borderColor: ring }}
+                whileTap={{ scale: selected ? 1 : 0.9 }} onClick={() => handleAnswer(opt)}>{opt}</motion.button>
             )
           })}
         </div>
       </div>
-    </div>
+    </ActivityScene>
   )
 }

@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
+import { CheckIcon } from '../../components/icons'
 import { useSound } from '../../hooks/useSound'
 import { getSightWordMastery, updateSightWord } from '../../lib/db'
 import { PRE_PRIMER, PRIMER } from '../../data/sightwords'
-import { useNavigate } from 'react-router-dom'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
 const WORD_POOL = [...PRE_PRIMER, ...PRIMER]
 
 export default function FlashCardFrenzy({ onComplete, profile }) {
-  const navigate = useNavigate()
   const [words, setWords] = useState([])
   const [current, setCurrent] = useState(0)
   const [showHelp, setShowHelp] = useState(false)
@@ -97,89 +97,58 @@ export default function FlashCardFrenzy({ onComplete, profile }) {
     const pct = Math.round((score / words.length) * 100)
     const perfect = pct === 100
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sky/30 to-blue-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-ocean mt-4">Flash Card Frenzy Done!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">{score}/{words.length} words known!</p>
-        {perfect && <p className="font-fredoka text-2xl text-gold mt-2">⭐ Amazing!</p>}
-        <motion.button
-          className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onComplete(pct, perfect)}
-        >Collect {perfect ? 60 : 45} XP! ⭐</motion.button>
-      </div>
+      <CompletionScreen subject="sightwords" title="Frenzy Done!" score={score} total={words.length}
+        perfect={perfect} xp={perfect ? 60 : 45} buttonLabel={`Collect ${perfect ? 60 : 45} XP!`}
+        onCollect={() => onComplete(pct, perfect)} />
     )
   }
 
   const word = words[current]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky/30 to-blue-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-sky/30 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/sight-words')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Flash Card Frenzy</div>
-        <div className="font-nunito text-sm text-midnight/60">{current + 1} / {words.length}</div>
-      </div>
+    <ActivityScene
+      subject="sightwords" title="Flash Card Frenzy" backRoute="/learn/sight-words"
+      current={current} total={words.length}
+      stitchPose={stitchPose} stitchSize={88}
+      message={showHelp ? `"${SENTENCES[word] || `Stitch loves this ${word}!`}"` : 'Do you know this word? Read it before the timer!'}>
 
-      <div className="w-full bg-gray-200 h-2">
-        <div className="bg-sky h-2 transition-all" style={{ width: `${((current + 1) / words.length) * 100}%` }} />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center p-6 gap-4">
+      <div className="flex flex-col items-center gap-5 max-w-sm mx-auto">
         {/* Timer */}
         <div className="flex gap-2">
           {[5,4,3,2,1].map(t => (
             <div key={t} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-fredoka
-              ${timer >= t ? 'bg-ocean text-white border-ocean' : 'bg-gray-100 border-gray-200 text-gray-300'}`}>{t}</div>
+              ${timer >= t ? 'bg-white text-ocean border-white' : 'bg-white/20 border-white/40 text-white/50'}`}>{t}</div>
           ))}
         </div>
 
-        {/* Stitch holding the card */}
-        <Stitch pose={stitchPose} size={100} />
-
-        {/* Word card */}
+        {/* Word on a scroll inside a bottle */}
         <AnimatePresence mode="wait">
-          <motion.div
-            key={word}
-            className="bg-white rounded-3xl shadow-xl px-12 py-10 text-center w-full max-w-sm"
-            initial={{ rotateY: 90, opacity: 0 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={{ rotateY: -90, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+          <motion.div key={word}
+            className="relative w-full max-w-xs text-center px-10 py-10 rounded-3xl shadow-card"
+            style={{ background: 'linear-gradient(160deg,#FFF7E0,#F3E2B3)', border: '5px solid #C9A24B' }}
+            initial={{ rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} exit={{ rotateY: -90, opacity: 0 }} transition={{ duration: 0.3 }}>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-16 rounded-full bg-[#C9A24B]/50" />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-16 rounded-full bg-[#C9A24B]/50" />
             <div className="font-fredoka text-6xl text-ocean">{word}</div>
           </motion.div>
         </AnimatePresence>
 
-        {/* Help sentence */}
-        <AnimatePresence>
-          {showHelp && (
-            <motion.div
-              className="bg-sky/20 rounded-2xl px-5 py-4 text-center max-w-sm"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            >
-              <p className="font-nunito text-midnight/70 text-sm italic">
-                "{SENTENCES[word] || `Stitch loves this ${word}!`}"
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Buttons */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm mt-auto">
+        {/* Buttons: starfish (know) + crab (help) */}
+        <div className="grid grid-cols-2 gap-4 w-full mt-2">
           <motion.button
-            className="bg-grass text-white font-fredoka text-xl py-5 rounded-2xl shadow-lg"
-            whileTap={{ scale: 0.95 }}
-            onClick={handleKnow}
-          >I know it! ✅</motion.button>
+            className="text-white font-fredoka text-xl py-5 rounded-2xl shadow-card flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(160deg,#8FE0A6,#2E7D32)' }}
+            whileTap={{ scale: 0.95 }} onClick={handleKnow}>
+            <CheckIcon size={22} circle={false} /> I know it!
+          </motion.button>
           <motion.button
-            className="bg-coral text-white font-fredoka text-xl py-5 rounded-2xl shadow-lg"
-            whileTap={{ scale: 0.95 }}
-            onClick={handleHelp}
-          >Help me 🙋</motion.button>
+            className="text-white font-fredoka text-xl py-5 rounded-2xl shadow-card"
+            style={{ background: 'linear-gradient(160deg,#FF8E53,#E53935)' }}
+            whileTap={{ scale: 0.95 }} onClick={handleHelp}>
+            Help me
+          </motion.button>
         </div>
       </div>
-    </div>
+    </ActivityScene>
   )
 }

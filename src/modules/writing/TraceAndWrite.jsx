@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
 import { useSound } from '../../hooks/useSound'
-import { useNavigate } from 'react-router-dom'
 
 // Letter order by stroke complexity
 const LETTER_ORDER = ['l','i','t','u','j','e','f','k','h','b','p','r','n','m','a','d','g','q','c','o','s','v','w','x','y','z']
@@ -156,7 +156,6 @@ function LetterCanvas({ letter, onComplete }) {
 }
 
 export default function TraceAndWrite({ onComplete }) {
-  const navigate = useNavigate()
   const [letterIdx, setLetterIdx] = useState(0)
   const [completed, setCompleted] = useState(0)
   const [stitchPose, setStitchPose] = useState('idle')
@@ -183,57 +182,32 @@ export default function TraceAndWrite({ onComplete }) {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-ocean/20 to-blue-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-ocean mt-4">Great Writing!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">You traced {TOTAL} letters perfectly!</p>
-        <motion.button
-          className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onComplete(100, true)}
-        >Collect 85 XP! ⭐</motion.button>
-      </div>
+      <CompletionScreen subject="writing" title="Great Writing!" score={TOTAL} total={TOTAL}
+        perfect xp={85} buttonLabel="Collect 85 XP!" onCollect={() => onComplete(100, true)} />
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ocean/20 to-blue-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-ocean/20 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/writing')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Trace & Write</div>
-        <div className="font-nunito text-sm text-midnight/60">{completed} / {TOTAL}</div>
-      </div>
+    <ActivityScene
+      subject="writing" title="Trace & Write" backRoute="/learn/writing"
+      current={completed} total={TOTAL}
+      stitchPose={stitchPose} stitchSize={84}
+      message={`Trace the letter "${letter.toUpperCase()}" on the chalkboard with your finger!`}>
 
-      <div className="w-full bg-gray-200 h-2">
-        <div className="bg-ocean h-2 transition-all" style={{ width: `${(completed / TOTAL) * 100}%` }} />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center p-6 gap-4">
-        <div className="flex items-center gap-4">
-          <Stitch pose={stitchPose} size={80} />
-          <div className="bg-white rounded-2xl px-4 py-3 shadow-md">
-            <p className="font-nunito text-sm text-midnight">
-              Trace the letter <strong className="font-fredoka text-2xl text-ocean">{letter.toUpperCase()}</strong> with your finger!
-            </p>
-          </div>
-        </div>
-
-        <div className="font-fredoka text-4xl text-ocean">
-          Letter: <span className="text-5xl">{letter.toUpperCase()}</span>
-          <span className="text-midnight/30 ml-4 text-3xl">{letter}</span>
+      <div className="flex flex-col items-center gap-4 max-w-sm mx-auto">
+        <div className="font-fredoka text-3xl text-white text-shadow-soft">
+          {letter.toUpperCase()} <span className="text-white/60 ml-2">{letter}</span>
         </div>
 
         <LetterCanvas key={letter} letter={letter} onComplete={handleLetterDone} />
 
-        {/* Progress dots */}
         <div className="flex gap-2">
           {Array.from({ length: TOTAL }).map((_, i) => (
             <div key={i} className={`w-4 h-4 rounded-full transition-colors
-              ${i < completed ? 'bg-grass' : i === completed ? 'bg-ocean' : 'bg-gray-200'}`} />
+              ${i < completed ? 'bg-white' : i === completed ? 'bg-white/60' : 'bg-white/25'}`} />
           ))}
         </div>
       </div>
-    </div>
+    </ActivityScene>
   )
 }

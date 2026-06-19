@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
+import { CheckIcon } from '../../components/icons'
 import { useSound } from '../../hooks/useSound'
 import { MATH_TOPICS } from '../../data/mathTopics'
-import { useNavigate } from 'react-router-dom'
 
 const problems = MATH_TOPICS[1].problems
 
 export default function NumberLineJump({ onComplete }) {
-  const navigate = useNavigate()
   const [idx, setIdx] = useState(0)
   const [answer, setAnswer] = useState('')
   const [score, setScore] = useState(0)
@@ -49,83 +49,53 @@ export default function NumberLineJump({ onComplete }) {
     const pct = Math.round((score / total) * 100)
     const perfect = score === total
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gold/20 to-yellow-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-yellow-700 mt-4">Math Star!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">{score}/{total} correct!</p>
-        <motion.button className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl"
-          whileTap={{ scale: 0.95 }} onClick={() => onComplete(pct, perfect)}>
-          Collect {perfect ? 55 : 40} XP! ⭐
-        </motion.button>
-      </div>
+      <CompletionScreen subject="math" title="Math Star!" score={score} total={total}
+        perfect={perfect} xp={perfect ? 55 : 40} buttonLabel={`Collect ${perfect ? 55 : 40} XP!`}
+        onCollect={() => onComplete(pct, perfect)} />
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gold/20 to-yellow-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-gold/30 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/math')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Number Line Jump</div>
-        <div className="font-nunito text-sm text-midnight/60">{idx + 1} / {total}</div>
-      </div>
+    <ActivityScene
+      subject="math" title="Number Line Jump" backRoute="/learn/math"
+      current={idx} total={total}
+      stitchPose={stitchPose} stitchSize={84}
+      message={feedback ? feedback.msg : `Help Stitch jump! What is ${p.a} + ${p.b}?`}>
 
-      <div className="flex-1 flex flex-col items-center p-6 gap-5">
-        <Stitch pose={stitchPose} size={80} />
-
-        {/* Problem */}
-        <div className="bg-white rounded-3xl p-8 shadow-xl w-full max-w-sm text-center">
-          <div className="font-fredoka text-5xl text-ocean mb-2">
-            {p.a} + {p.b} = ?
-          </div>
-
-          {/* Visual counters */}
-          <div className="flex flex-wrap gap-1 justify-center my-4">
+      <div className="flex flex-col items-center gap-5 max-w-sm mx-auto">
+        <div className="glass-strong rounded-3xl p-6 w-full text-center">
+          <div className="font-fredoka text-5xl text-white text-shadow-soft mb-2">{p.a} + {p.b} = ?</div>
+          <div className="flex flex-wrap gap-1 justify-center my-2">
             {Array.from({ length: p.a }).map((_, i) => <span key={`a-${i}`} className="text-2xl">{p.emoji[0]}</span>)}
-            <span className="font-fredoka text-2xl text-coral mx-2">+</span>
+            <span className="font-fredoka text-2xl text-white mx-2">+</span>
             {Array.from({ length: p.b }).map((_, i) => <span key={`b-${i}`} className="text-2xl">{p.emoji[1] || p.emoji[0]}</span>)}
           </div>
         </div>
 
-        {/* Number input */}
         <input
-          type="number"
-          value={answer}
-          onChange={e => setAnswer(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          placeholder="?"
-          min="0" max="40"
-          className="font-fredoka text-5xl text-center border-4 border-ocean rounded-2xl py-4 w-32
-            focus:outline-none focus:border-gold text-midnight"
-        />
+          type="number" value={answer} onChange={e => setAnswer(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSubmit()} placeholder="?" min="0" max="40"
+          className="font-fredoka text-5xl text-center bg-white border-4 border-white rounded-2xl py-4 w-32
+            focus:outline-none focus:border-gold text-midnight" />
 
-        {/* Number pad */}
         <div className="grid grid-cols-5 gap-2 w-full max-w-xs">
           {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(n => (
             <motion.button key={n}
               className={`py-3 rounded-xl font-fredoka text-lg
-                ${answer == n ? 'bg-ocean text-white' : 'bg-white text-midnight border border-gray-200'}`}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setAnswer(String(n))}
-            >{n}</motion.button>
+                ${answer == n ? 'bg-gold text-[#6b4a12]' : 'bg-white/85 text-midnight'}`}
+              whileTap={{ scale: 0.9 }} onClick={() => setAnswer(String(n))}>{n}</motion.button>
           ))}
         </div>
 
-        {feedback && (
-          <div className={`font-fredoka text-xl px-6 py-3 rounded-2xl
-            ${feedback.type === 'correct' ? 'bg-grass/20 text-grass' : 'bg-coral/20 text-coral'}`}>
-            {feedback.msg}
-          </div>
-        )}
-
         {answer && !feedback && (
           <motion.button
-            className="w-full max-w-sm bg-grass text-white font-fredoka text-2xl py-5 rounded-2xl"
-            whileTap={{ scale: 0.95 }}
-            onClick={handleSubmit}
-          >Check! ✅</motion.button>
+            className="btn-primary w-full flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg,#56C271,#2E7D32)' }}
+            whileTap={{ scale: 0.95 }} onClick={handleSubmit}>
+            <CheckIcon size={24} circle={false} /> Check!
+          </motion.button>
         )}
       </div>
-    </div>
+    </ActivityScene>
   )
 }

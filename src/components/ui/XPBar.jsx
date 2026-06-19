@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { getXPProgress } from '../../utils/levelCalc'
+import { StarIcon } from '../icons'
 
 export default function XPBar({ xp = 0, compact = false }) {
   const { current, next, progress, xpInLevel, xpNeeded } = getXPProgress(xp)
@@ -22,9 +23,9 @@ export default function XPBar({ xp = 0, compact = false }) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-gold text-xl">⭐</span>
-        <span className="font-fredoka text-xl text-midnight">{displayXP.toLocaleString()}</span>
+      <div className="xp-counter flex items-center gap-1.5">
+        <StarIcon size={20} />
+        <span className="font-fredoka text-lg text-white text-shadow-soft">{displayXP.toLocaleString()}</span>
       </div>
     )
   }

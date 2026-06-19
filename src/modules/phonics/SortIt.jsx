@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import { motion } from 'framer-motion'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
 import { useSound } from '../../hooks/useSound'
-import { useNavigate } from 'react-router-dom'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
 export default function SortIt({ level, onComplete }) {
-  const navigate = useNavigate()
   const [words, setWords] = useState([])
   const [sortedA, setSortedA] = useState([])
   const [sortedB, setSortedB] = useState([])
@@ -65,86 +64,48 @@ export default function SortIt({ level, onComplete }) {
     const pct = Math.round((score / total) * 100)
     const perfect = score === total
     return (
-      <div className="min-h-screen bg-gradient-to-b from-coral/20 to-red-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-coral mt-4">All Sorted!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">{score}/{total} correct</p>
-        <motion.button
-          className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl shadow-lg"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onComplete(pct, perfect)}
-        >Collect {perfect ? 65 : 50} XP! ⭐</motion.button>
-      </div>
+      <CompletionScreen subject="phonics" title="All Sorted!" score={score} total={total}
+        perfect={perfect} xp={perfect ? 65 : 50} onCollect={() => onComplete(pct, perfect)} />
     )
   }
 
   if (!currentWord) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-coral/20 to-red-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-coral/20 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/phonics')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Sort It!</div>
-        <div className="font-nunito text-sm text-midnight/60">{total - remaining.length + 1} / {total}</div>
-      </div>
+    <ActivityScene
+      subject="phonics" title="Sort It!" backRoute="/learn/phonics"
+      current={total - remaining.length} total={total}
+      stitchPose={stitchPose} stitchSize={84}
+      message={feedback ? feedback.msg : 'Which treasure chest does this word belong in?'}>
 
-      <div className="w-full bg-gray-200 h-2">
-        <div className="bg-coral h-2 transition-all" style={{ width: `${((total - remaining.length) / total) * 100}%` }} />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center p-6 gap-4">
-        <div className="flex items-center gap-3">
-          <Stitch pose={stitchPose} size={80} />
-          <div className="bg-white rounded-2xl px-4 py-3 shadow-md">
-            <p className="font-nunito text-sm text-midnight">Which group does this word belong to?</p>
-          </div>
-        </div>
-
-        {/* Current word */}
-        <motion.div
-          key={currentWord}
-          className="bg-ocean text-white font-fredoka text-5xl px-10 py-6 rounded-3xl shadow-lg"
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-        >
+      <div className="flex flex-col items-center gap-5 max-w-sm mx-auto">
+        {/* Word on a coin */}
+        <motion.div key={currentWord}
+          className="font-fredoka text-4xl text-[#6b4a12] px-10 py-6 rounded-full shadow-card"
+          style={{ background: 'radial-gradient(circle at 38% 32%, #FFE9A8, #E6B53C)', border: '4px solid #C9962B' }}
+          initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
           {currentWord}
         </motion.div>
 
-        {/* Bucket buttons */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+        {/* Treasure chests */}
+        <div className="grid grid-cols-2 gap-4 w-full">
           {[
-            { bucket: 'A', cat: catA, words: sortedA, color: 'from-blue-400 to-ocean' },
-            { bucket: 'B', cat: catB, words: sortedB, color: 'from-grass to-green-600' },
-          ].map(({ bucket, cat, words: sw, color }) => (
+            { bucket: 'A', cat: catA, words: sortedA, grad: 'linear-gradient(160deg,#4FC3F7,#1B6CA8)' },
+            { bucket: 'B', cat: catB, words: sortedB, grad: 'linear-gradient(160deg,#8FE0A6,#2E7D32)' },
+          ].map(({ bucket, cat, words: sw, grad }) => (
             <motion.button key={bucket}
-              className={`bg-gradient-to-br ${color} text-white rounded-2xl p-4 min-h-[140px]
-                flex flex-col items-center justify-between shadow-lg`}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleSort(bucket)}
-            >
-              <span className="font-fredoka text-lg">{cat.label}</span>
+              className="text-white rounded-2xl p-4 min-h-[150px] flex flex-col items-center justify-between shadow-card"
+              style={{ background: grad, border: '3px solid rgba(255,255,255,0.4)' }}
+              whileTap={{ scale: 0.95 }} onClick={() => handleSort(bucket)}>
+              <span className="font-fredoka text-lg text-shadow-soft">{cat.label}</span>
               <div className="flex flex-wrap gap-1 justify-center">
-                {sw.map(w => (
-                  <span key={w} className="bg-white/30 rounded px-2 py-1 text-xs font-nunito">{w}</span>
-                ))}
+                {sw.map(w => <span key={w} className="bg-white/30 rounded px-2 py-0.5 text-xs font-nunito font-700">{w}</span>)}
               </div>
-              <span className="font-nunito text-sm opacity-80">{sw.length} words</span>
+              <span className="font-nunito font-700 text-sm opacity-90">{sw.length} words</span>
             </motion.button>
           ))}
         </div>
-
-        {/* Feedback */}
-        <AnimatePresence>
-          {feedback && (
-            <motion.div
-              className={`font-fredoka text-2xl px-6 py-3 rounded-2xl
-                ${feedback.type === 'correct' ? 'bg-grass/20 text-grass' : 'bg-coral/20 text-coral'}`}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            >{feedback.msg}</motion.div>
-          )}
-        </AnimatePresence>
       </div>
-    </div>
+    </ActivityScene>
   )
 }

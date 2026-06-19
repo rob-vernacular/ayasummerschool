@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
 import { useSound } from '../../hooks/useSound'
-import { useNavigate } from 'react-router-dom'
 
 const SHAPES = [
   { name: 'circle', color: 'red', emoji: '🔴', type: 'round' },
@@ -18,7 +18,6 @@ const SHAPES = [
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
 export default function ShapeSort({ onComplete }) {
-  const navigate = useNavigate()
   const [shapes] = useState(() => shuffle(SHAPES).slice(0, 6))
   const [current, setCurrent] = useState(0)
   const [score, setScore] = useState(0)
@@ -50,49 +49,31 @@ export default function ShapeSort({ onComplete }) {
   if (done) {
     const pct = Math.round((score / shapes.length) * 100)
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gold/20 to-yellow-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-yellow-700 mt-4">Shape Sorter!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">{score}/{shapes.length} correct!</p>
-        <motion.button className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl"
-          whileTap={{ scale: 0.95 }} onClick={() => onComplete(pct, pct === 100)}>
-          Collect {pct === 100 ? 55 : 40} XP! ⭐
-        </motion.button>
-      </div>
+      <CompletionScreen subject="math" title="Shape Sorter!" score={score} total={shapes.length}
+        perfect={pct === 100} xp={pct === 100 ? 55 : 40} buttonLabel={`Collect ${pct === 100 ? 55 : 40} XP!`}
+        onCollect={() => onComplete(pct, pct === 100)} />
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gold/20 to-yellow-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-gold/30 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/math')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Shape Sort</div>
-        <div className="font-nunito text-sm text-midnight/60">{current + 1} / {shapes.length}</div>
-      </div>
+    <ActivityScene
+      subject="math" title="Shape Sort" backRoute="/learn/math"
+      current={current} total={shapes.length}
+      stitchPose={stitchPose} stitchSize={84}
+      message={feedback ? feedback.msg : question.text}>
 
-      <div className="flex-1 flex flex-col items-center p-6 gap-5">
-        <Stitch pose={stitchPose} size={80} />
-        <div className="bg-white rounded-2xl px-5 py-3 shadow-md text-center">
-          <p className="font-nunito text-lg text-midnight">{question.text}</p>
-        </div>
+      <div className="flex flex-col items-center gap-5 max-w-sm mx-auto">
         <div className="text-9xl">{shape.emoji}</div>
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+        <div className="grid grid-cols-2 gap-4 w-full">
           {['A','B'].map(b => (
             <motion.button key={b}
-              className="bg-white border-2 border-gray-200 font-fredoka text-2xl py-6 rounded-2xl shadow-md"
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleAnswer(b)}
-            >{b === 'A' ? question.catA : question.catB}</motion.button>
+              className="glass-strong text-white font-fredoka text-2xl py-6 rounded-2xl shadow-card text-shadow-soft"
+              whileTap={{ scale: 0.95 }} onClick={() => handleAnswer(b)}>
+              {b === 'A' ? question.catA : question.catB}
+            </motion.button>
           ))}
         </div>
-        {feedback && (
-          <div className={`font-fredoka text-xl px-6 py-3 rounded-2xl
-            ${feedback.type === 'correct' ? 'bg-grass/20 text-grass' : 'bg-coral/20 text-coral'}`}>
-            {feedback.msg}
-          </div>
-        )}
       </div>
-    </div>
+    </ActivityScene>
   )
 }

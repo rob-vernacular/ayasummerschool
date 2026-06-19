@@ -2,16 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+@import './animations.css';
+
 @layer base {
   :root {
-    --color-ocean:    #1B6CA8;
-    --color-sky:      #4FC3F7;
-    --color-sand:     #FFF8E7;
-    --color-coral:    #FF6B6B;
-    --color-gold:     #FFD700;
-    --color-grass:    #56C271;
-    --color-midnight: #0D1B2A;
-    --color-cloud:    #FFFFFF;
+    /* Ocean depth */
+    --color-ocean-deep:  #0D47A1;
+    --color-ocean:       #1B6CA8;
+    --color-ocean-mid:   #2196F3;
+    --color-ocean-light: #4FC3F7;
+    --color-sky:         #87CEEB;
+    --color-sky-pale:    #C8E6F5;
+
+    /* Land */
+    --color-sand:        #F5DEB3;
+    --color-sand-dark:   #D4A853;
+    --color-cream:       #FFF8E7;
+
+    /* Accents */
+    --color-coral:       #FF6B6B;
+    --color-coral-dark:  #E53935;
+    --color-gold:        #FFD700;
+    --color-gold-dark:   #FFA000;
+    --color-grass:       #56C271;
+    --color-grass-dark:  #2E7D32;
+    --color-purple:      #7B1FA2;
+    --color-purple-deep: #4A148C;
+    --color-midnight:    #0D1B2A;
+    --color-white:       #FFFFFF;
+
+    /* Glassmorphism */
+    --glass-bg:     rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.25);
+    --glass-blur:   blur(12px);
+
+    /* Shadows */
+    --shadow-card:  0 8px 32px rgba(0, 0, 0, 0.2);
+    --shadow-float: 0 16px 48px rgba(0, 0, 0, 0.3);
+    --shadow-text:  0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
   * {
@@ -27,30 +55,43 @@
 
   body {
     font-family: 'Nunito', sans-serif;
-    background-color: var(--color-sand);
+    font-weight: 600;
+    background-color: var(--color-ocean);
     color: var(--color-midnight);
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* Prevent context menus on interactive elements */
+  h1, h2, h3,
+  .level-name, .card-title, .activity-name, .xp-counter, .streak-counter {
+    font-family: 'Fredoka One', cursive;
+  }
+
+  button, input, label, .instruction-text {
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .reading-text {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 1.8;
+  }
+
   button, [role="button"] {
     -webkit-user-select: none;
     user-select: none;
   }
 
-  /* Scrollbar styling */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
 
-  /* Focus visible styles */
   :focus-visible {
-    outline: 3px solid var(--color-ocean);
+    outline: 3px solid var(--color-gold);
     outline-offset: 2px;
   }
 
-  /* Remove number input spinners */
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
@@ -59,27 +100,59 @@
   .font-fredoka { font-family: 'Fredoka One', cursive; }
   .font-nunito  { font-family: 'Nunito', sans-serif; }
 
-  /* Touch-friendly minimum tap targets */
+  /* Frosted glass surface */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+  }
+
+  /* Touch-friendly buttons — min 56px target, 18px+ text */
   .btn-primary {
-    @apply min-h-[56px] px-6 rounded-2xl font-fredoka text-xl bg-ocean text-white
+    @apply min-h-[56px] px-6 rounded-2xl font-fredoka text-xl text-white
            shadow-lg active:scale-95 transition-transform;
+    background: linear-gradient(135deg, var(--color-ocean-mid), var(--color-ocean));
+    text-shadow: var(--shadow-text);
+  }
+
+  .btn-gold {
+    @apply min-h-[56px] px-6 rounded-2xl font-fredoka text-xl shadow-lg
+           active:scale-95 transition-transform;
+    background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+    color: var(--color-midnight);
   }
 
   .btn-secondary {
-    @apply min-h-[56px] px-6 rounded-2xl font-fredoka text-xl bg-white border-2 border-ocean
-           text-ocean active:scale-95 transition-transform;
+    @apply min-h-[56px] px-6 rounded-2xl font-fredoka text-xl bg-white border-2
+           active:scale-95 transition-transform;
+    border-color: var(--color-ocean);
+    color: var(--color-ocean);
   }
 
-  /* Card base */
   .card {
-    @apply bg-white rounded-3xl p-5 shadow-md;
+    @apply bg-white rounded-3xl p-5;
+    box-shadow: var(--shadow-card);
   }
+
+  .text-shadow-soft { text-shadow: var(--shadow-text); }
 }
 
 @layer utilities {
   .border-3 { border-width: 3px; }
+  .border-4 { border-width: 4px; }
+  .rounded-4xl { border-radius: 2rem; }
 
-  /* Reduce motion */
+  .shadow-card  { box-shadow: var(--shadow-card); }
+  .shadow-float { box-shadow: var(--shadow-float); }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;

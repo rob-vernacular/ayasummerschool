@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import TopBar from '../../components/layout/TopBar'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import ActivityChooserCard from '../../components/ui/ActivityChooserCard'
 import CountAndTap from './CountAndTap'
 import NumberLineJump from './NumberLineJump'
 import ShapeSort from './ShapeSort'
@@ -11,17 +9,15 @@ import { useProfile } from '../../hooks/useProfile'
 import { useProgress } from '../../hooks/useProgress'
 import { logActivity } from '../../lib/db'
 import { XP_VALUES } from '../../hooks/useXP'
-import { MATH_TOPICS } from '../../data/mathTopics'
 
 const ACTIVITIES = [
-  { id: 'count', label: 'Count & Tap', emoji: '🔢', desc: 'Count the objects Stitch is holding!' },
-  { id: 'numberline', label: 'Number Line Jump', emoji: '🦘', desc: 'Help Stitch jump to the right number!' },
-  { id: 'shapes', label: 'Shape Sort', emoji: '🔷', desc: 'Sort the shapes by type and color!' },
-  { id: 'stories', label: 'Math Stories', emoji: '📖', desc: 'Solve word problems with Stitch!' },
+  { id: 'count',      label: 'Count & Tap',       desc: 'Count the objects Stitch is holding!' },
+  { id: 'numberline', label: 'Number Line Jump',  desc: 'Help Stitch jump to the right number!' },
+  { id: 'shapes',     label: 'Shape Sort',        desc: 'Sort the shapes by type and color!' },
+  { id: 'stories',    label: 'Math Stories',      desc: 'Solve word problems with Stitch!' },
 ]
 
 export default function MathModule() {
-  const navigate = useNavigate()
   const { profile } = useProfile()
   const { progress, addXP } = useProgress()
   const [activity, setActivity] = useState(null)
@@ -41,41 +37,18 @@ export default function MathModule() {
   if (activity === 'stories')    return <MathStories onComplete={handleComplete} profile={profile} />
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gold/20 to-yellow-50 flex flex-col">
-      <TopBar profile={profile} progress={progress} showBack backRoute="/home" title="🔢 Math" />
-
-      <div className="flex-1 p-6">
-        <div className="bg-gold/30 rounded-2xl p-4 mb-6 flex items-center gap-4">
-          <Stitch pose="happy" size={70} />
-          <div>
-            <div className="font-fredoka text-xl text-yellow-700">Math Bonus Zone! 🎉</div>
-            <div className="font-nunito text-sm text-midnight/70">
-              You unlocked Math! This is bonus fun on top of your 3 daily activities.
-            </div>
-          </div>
-        </div>
-
-        <h2 className="font-fredoka text-2xl text-midnight mb-4">Choose an activity</h2>
-        <div className="flex flex-col gap-4">
-          {ACTIVITIES.map((act, i) => (
-            <motion.button key={act.id}
-              className="bg-white rounded-2xl p-5 shadow-md flex items-center gap-4 text-left"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setActivity(act.id)}
-            >
-              <span className="text-4xl">{act.emoji}</span>
-              <div>
-                <div className="font-fredoka text-xl text-midnight">{act.label}</div>
-                <div className="font-nunito text-sm text-midnight/60">{act.desc}</div>
-              </div>
-              <span className="ml-auto text-2xl">→</span>
-            </motion.button>
-          ))}
-        </div>
+    <ActivityScene subject="math" message="Welcome to Number Island! This is bonus fun on top of your daily 3. Pick a game!" stitchPose="excited" stitchSize={110}>
+      <div className="glass rounded-3xl px-4 py-3 mb-4">
+        <div className="font-fredoka text-white text-shadow-soft">Math Bonus Zone!</div>
+        <div className="font-nunito font-600 text-white/85 text-sm">You unlocked Math! Bonus fun on top of your 3 daily activities.</div>
       </div>
-    </div>
+      <h2 className="font-fredoka text-xl text-white mb-3 text-shadow-soft">Choose a game</h2>
+      <div className="flex flex-col gap-3">
+        {ACTIVITIES.map((act, i) => (
+          <ActivityChooserCard key={act.id} subject="math" index={i}
+            label={act.label} desc={act.desc} onClick={() => setActivity(act.id)} />
+        ))}
+      </div>
+    </ActivityScene>
   )
 }

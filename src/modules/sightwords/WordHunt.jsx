@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
 import { useSound } from '../../hooks/useSound'
 import { PRE_PRIMER } from '../../data/sightwords'
-import { useNavigate } from 'react-router-dom'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
@@ -60,7 +59,6 @@ function createGrid(words) {
 }
 
 export default function WordHunt({ onComplete, profile }) {
-  const navigate = useNavigate()
   const [targetWords] = useState(() => shuffle(PRE_PRIMER).slice(0, 3))
   const [gridData, setGridData] = useState(null)
   const [found, setFound] = useState([])
@@ -117,65 +115,46 @@ export default function WordHunt({ onComplete, profile }) {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sky/30 to-blue-50 flex flex-col items-center justify-center p-6">
-        <motion.div animate={{ rotate: [-5, 5, -5, 5, 0] }} transition={{ duration: 1 }}>
-          <Stitch pose="happy" size={160} />
-        </motion.div>
-        <h2 className="font-fredoka text-4xl text-ocean mt-4">All Words Found!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">You found all {targetWords.length} words!</p>
-        <motion.button
-          className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onComplete(100, true)}
-        >Collect 60 XP! ⭐</motion.button>
-      </div>
+      <CompletionScreen subject="sightwords" title="Treasure Found!" score={targetWords.length} total={targetWords.length}
+        perfect xp={60} buttonLabel="Collect 60 XP!" onCollect={() => onComplete(100, true)} />
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky/30 to-blue-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-sky/30 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/sight-words')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Word Hunt</div>
-        <div className="font-nunito text-sm text-midnight/60">{found.length} / {targetWords.length}</div>
-      </div>
+    <ActivityScene
+      subject="sightwords" title="Word Hunt" backRoute="/learn/sight-words"
+      current={found.length} total={targetWords.length} showStitch={false}>
 
-      <div className="flex-1 flex flex-col items-center p-4 gap-4">
-        {/* Target words */}
-        <div className="flex gap-3 w-full justify-center">
+      <div className="flex flex-col items-center gap-4">
+        {/* Treasure words to find */}
+        <div className="flex gap-3 w-full justify-center flex-wrap">
           {targetWords.map(w => (
-            <div key={w} className={`font-fredoka text-xl px-4 py-2 rounded-xl
-              ${found.includes(w) ? 'bg-grass text-white line-through' : 'bg-white text-ocean border-2 border-ocean'}`}>
+            <div key={w} className={`font-fredoka text-lg px-4 py-2 rounded-xl
+              ${found.includes(w) ? 'bg-grass-dark text-white line-through' : 'bg-gold text-[#6b4a12] border-2 border-gold-dark'}`}>
               {w}
             </div>
           ))}
         </div>
 
-        <Stitch pose={stitchPose} size={70} />
-
-        {/* Grid */}
+        {/* Treasure map grid */}
         {gridData && (
           <div
-            className="bg-white rounded-2xl p-3 shadow-xl select-none"
-            onPointerUp={handleCellEnd}
-            onPointerLeave={handleCellEnd}
-          >
+            className="rounded-2xl p-3 shadow-card select-none"
+            style={{ background: 'linear-gradient(160deg,#F3E2B3,#E0C381)', border: '4px solid #B89052' }}
+            onPointerUp={handleCellEnd} onPointerLeave={handleCellEnd}>
             {gridData.grid.map((row, r) => (
               <div key={r} className="flex">
                 {row.map((letter, c) => {
                   const sel = isCellSelected(r, c)
                   const fnd = isCellFound(r, c)
                   return (
-                    <div
-                      key={c}
+                    <div key={c}
                       className={`w-10 h-10 flex items-center justify-center font-fredoka text-lg
                         rounded cursor-pointer select-none transition-colors
-                        ${fnd ? 'bg-grass text-white' : sel ? 'bg-sky/50 text-ocean' : 'text-midnight hover:bg-sand'}`}
+                        ${fnd ? 'bg-grass-dark text-white' : sel ? 'bg-gold text-[#6b4a12]' : 'text-[#5a4322] hover:bg-white/40'}`}
                       onPointerDown={() => handleCellStart(r, c)}
                       onPointerEnter={() => handleCellEnter(r, c)}
-                      style={{ touchAction: 'none' }}
-                    >
+                      style={{ touchAction: 'none' }}>
                       {letter.toUpperCase()}
                     </div>
                   )
@@ -185,6 +164,6 @@ export default function WordHunt({ onComplete, profile }) {
           </div>
         )}
       </div>
-    </div>
+    </ActivityScene>
   )
 }

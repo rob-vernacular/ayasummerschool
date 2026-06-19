@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
 import { useSound } from '../../hooks/useSound'
-import { useNavigate } from 'react-router-dom'
 
 const CELEBRATE = ['Amazing!', 'You got it!', 'Super!', 'Stitch loves it!', 'Wow, wow, wow!', 'So smart!', 'Yes! Yes!']
 const ENCOURAGEMENT = ['Uh oh! Almost!', 'So close! Try again!', 'Stitch believes in you!', 'One more try!']
@@ -10,7 +10,6 @@ const ENCOURAGEMENT = ['Uh oh! Almost!', 'So close! Try again!', 'Stitch believe
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
 export default function SoundMatching({ level, onComplete, profile }) {
-  const navigate = useNavigate()
   const [questions, setQuestions] = useState([])
   const [current, setCurrent] = useState(0)
   const [selected, setSelected] = useState(null)
@@ -86,94 +85,56 @@ export default function SoundMatching({ level, onComplete, profile }) {
     const pct = Math.round((score / totalQ) * 100)
     const perfect = score === totalQ
     return (
-      <div className="min-h-screen bg-gradient-to-b from-coral/20 to-red-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-coral mt-4">Done!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">{score}/{totalQ} correct — {pct}%</p>
-        {perfect && <p className="font-fredoka text-2xl text-gold mt-2">⭐ Perfect score!</p>}
-        <motion.button
-          className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl shadow-lg"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onComplete(pct, perfect)}
-        >Collect {perfect ? 65 : 50} XP! ⭐</motion.button>
-      </div>
+      <CompletionScreen subject="phonics" score={score} total={totalQ} perfect={perfect}
+        xp={perfect ? 65 : 50} onCollect={() => onComplete(pct, perfect)} />
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-coral/20 to-red-50 flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-coral/20 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/phonics')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Sound Matching</div>
-        <div className="font-nunito text-sm text-midnight/60">{current + 1} / {totalQ}</div>
-      </div>
+    <ActivityScene
+      subject="phonics" title="Sound Matching" backRoute="/learn/phonics"
+      current={current} total={totalQ}
+      stitchPose={stitchPose} stitchSize={90}
+      message={feedback ? feedback.msg : 'What word does this picture show?'}>
 
-      {/* Progress bar */}
-      <div className="w-full bg-gray-200 h-2">
-        <motion.div className="bg-coral h-2" animate={{ width: `${((current + 1) / totalQ) * 100}%` }} />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center p-6 gap-6">
-        {/* Stitch + question */}
-        <div className="flex items-center gap-4">
-          <Stitch pose={stitchPose} size={90} />
-          <div className="bg-white rounded-3xl px-5 py-4 shadow-md max-w-[220px]">
-            <p className="font-nunito text-base text-midnight">
-              What word does this picture show?
-            </p>
-          </div>
-        </div>
-
-        {/* Target display */}
+      <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
+        {/* Picture on driftwood */}
         <motion.div
-          className="bg-white rounded-3xl px-8 py-6 shadow-lg text-center w-full max-w-sm"
-          key={current}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-        >
-          <div className="text-8xl">{q.emoji}</div>
+          className="relative w-full text-center px-8 py-6 rounded-3xl shadow-card"
+          style={{ background: 'linear-gradient(160deg, #E7C9A0, #C99A63)', border: '4px solid #B07D45' }}
+          key={current} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <div className="absolute inset-x-6 top-1/2 h-px bg-black/10" />
+          <div className="text-8xl relative">{q.emoji}</div>
         </motion.div>
 
-        {/* Options */}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+        {/* Shell answer options */}
+        <div className="grid grid-cols-2 gap-4 w-full">
           {q.options.map(opt => {
             const isSelected = selected === opt
             const isCorrect = opt === q.target
-            let btnClass = 'bg-white border-2 border-gray-200 text-midnight'
-            if (isSelected) {
-              btnClass = isCorrect
-                ? 'bg-grass/20 border-2 border-grass text-grass'
-                : 'bg-coral/20 border-2 border-coral text-coral'
-            }
+            let bg = 'linear-gradient(160deg, #FFFFFF, #FFE9D6)'
+            let ring = 'rgba(0,0,0,0.08)'
+            let text = '#16202B'
+            if (isSelected && isCorrect) { bg = 'linear-gradient(160deg, #C8F2D4, #8FE0A6)'; ring = '#56C271'; text = '#1B5E20' }
+            if (isSelected && !isCorrect) { bg = 'linear-gradient(160deg, #FFD6D6, #FFA9A9)'; ring = '#E53935'; text = '#B71C1C' }
             return (
               <motion.button key={opt}
-                className={`font-fredoka text-2xl py-5 rounded-2xl shadow-sm ${btnClass}`}
+                className="relative font-fredoka text-2xl py-6 shadow-card overflow-hidden"
+                style={{ background: bg, color: text, borderRadius: '46% 46% 50% 50% / 60% 60% 40% 40%', border: `3px solid ${ring}` }}
                 whileTap={{ scale: selected ? 1 : 0.93 }}
-                animate={isSelected && !isCorrect ? { x: [-4, 4, -4, 4, 0] } : {}}
-                transition={{ duration: 0.3 }}
-                onClick={() => handleAnswer(opt)}
-              >
+                animate={isSelected && !isCorrect ? { x: [-6, 6, -4, 4, 0] } : {}}
+                transition={{ duration: 0.35 }}
+                onClick={() => handleAnswer(opt)}>
+                {/* shell ridges */}
+                <span className="pointer-events-none absolute inset-x-3 top-2 flex justify-center gap-1.5 opacity-30">
+                  {[0,1,2,3,4].map(i => <span key={i} className="w-px h-3" style={{ background: text, transform: `rotate(${(i-2)*12}deg)` }} />)}
+                </span>
                 {opt}
               </motion.button>
             )
           })}
         </div>
-
-        {/* Feedback */}
-        <AnimatePresence>
-          {feedback && (
-            <motion.div
-              className={`font-fredoka text-2xl px-6 py-3 rounded-2xl
-                ${feedback.type === 'correct' ? 'bg-grass/20 text-grass' : 'bg-coral/20 text-coral'}`}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            >
-              {feedback.msg}
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
-    </div>
+    </ActivityScene>
   )
 }

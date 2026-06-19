@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
+import { CheckIcon } from '../../components/icons'
 import { useSound } from '../../hooks/useSound'
-import { useNavigate } from 'react-router-dom'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
@@ -20,7 +21,6 @@ const SENTENCES = [
 ]
 
 export default function SentenceScramble({ onComplete }) {
-  const navigate = useNavigate()
   const [rounds, setRounds] = useState([])
   const [current, setCurrent] = useState(0)
   const [placed, setPlaced] = useState([])
@@ -85,94 +85,67 @@ export default function SentenceScramble({ onComplete }) {
     const pct = Math.round((score / rounds.length) * 100)
     const perfect = score === rounds.length
     return (
-      <div className="min-h-screen bg-gradient-to-b from-ocean/20 to-blue-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-ocean mt-4">Scramble Master!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">{score}/{rounds.length} sentences!</p>
-        <motion.button
-          className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onComplete(pct, perfect)}
-        >Collect {perfect ? 85 : 70} XP! ⭐</motion.button>
-      </div>
+      <CompletionScreen subject="writing" title="Scramble Master!" score={score} total={rounds.length}
+        perfect={perfect} xp={perfect ? 85 : 70} buttonLabel={`Collect ${perfect ? 85 : 70} XP!`}
+        onCollect={() => onComplete(pct, perfect)} />
     )
   }
 
   const round = rounds[current]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ocean/20 to-blue-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-ocean/20 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/writing')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Sentence Scramble</div>
-        <div className="font-nunito text-sm text-midnight/60">{current + 1} / {rounds.length}</div>
-      </div>
+    <ActivityScene
+      subject="writing" title="Sentence Scramble" backRoute="/learn/writing"
+      current={current} total={rounds.length}
+      stitchPose={stitchPose} stitchSize={84}
+      message="Stitch spilled his word tiles! Put them in order.">
 
-      <div className="w-full bg-gray-200 h-2">
-        <div className="bg-ocean h-2 transition-all" style={{ width: `${((current + 1) / rounds.length) * 100}%` }} />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center p-6 gap-4">
-        <div className="flex items-center gap-3">
-          <Stitch pose={stitchPose} size={80} />
-          <div className="bg-white rounded-2xl px-4 py-3 shadow-md max-w-[200px]">
-            <p className="font-nunito text-sm text-midnight">Put the words in the right order!</p>
-          </div>
-        </div>
-
-        {/* Placed words */}
+      <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
+        {/* Banner that unfurls */}
         <motion.div
-          className="min-h-[70px] w-full bg-white rounded-2xl p-4 shadow-inner flex flex-wrap gap-2 items-center border-2 border-ocean/30"
-          animate={shake ? { x: [-5, 5, -5, 5, 0] } : {}}
-          transition={{ duration: 0.4 }}
-        >
+          className="min-h-[72px] w-full rounded-2xl p-4 flex flex-wrap gap-2 items-center justify-center"
+          style={{ background: 'linear-gradient(160deg,#FFF7E0,#F0DFB0)', border: '3px solid #C9A24B', boxShadow: 'var(--shadow-card)' }}
+          animate={shake ? { x: [-5, 5, -5, 5, 0] } : {}} transition={{ duration: 0.4 }}>
           {placed.length === 0 && (
-            <span className="font-nunito text-midnight/30 text-sm w-full text-center">Tap words below to build the sentence</span>
+            <span className="font-nunito font-700 text-[#9a7a3a] text-sm w-full text-center">Tap the bamboo tiles below to build the sentence</span>
           )}
           {placed.map(tile => (
             <motion.button key={tile.id}
-              className="bg-ocean text-white font-fredoka text-lg px-4 py-2 rounded-xl shadow-sm"
-              whileTap={{ scale: 0.9 }}
-              layout
-              onClick={() => handleRemove(tile)}
-            >{tile.word}</motion.button>
+              className="text-white font-fredoka text-lg px-4 py-2 rounded-xl shadow-sm"
+              style={{ background: 'linear-gradient(160deg,#9C5FD0,#7B1FA2)' }}
+              whileTap={{ scale: 0.9 }} layout onClick={() => handleRemove(tile)}>{tile.word}</motion.button>
           ))}
         </motion.div>
 
-        {/* Hint */}
         <AnimatePresence>
           {showHint && (
-            <motion.div className="bg-gold/20 rounded-xl px-4 py-2 text-sm font-nunito text-midnight/70"
+            <motion.div className="glass rounded-xl px-4 py-2 text-sm font-nunito font-700 text-white text-shadow-soft"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               Hint: "{round.answer[0]} {round.answer[1]}..."
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Available tiles */}
+        {/* Bamboo tiles */}
         <div className="flex flex-wrap gap-3 justify-center w-full">
           {available.map(tile => (
             <motion.button key={tile.id}
-              className="bg-white border-2 border-ocean/50 text-midnight font-fredoka text-xl px-5 py-3 rounded-xl shadow-md"
-              whileTap={{ scale: 0.9 }}
-              layout
-              onClick={() => handleTile(tile)}
-            >{tile.word}</motion.button>
+              className="font-fredoka text-xl px-5 py-3 rounded-xl shadow-card text-[#5a4322]"
+              style={{ background: 'linear-gradient(160deg,#E8D9A8,#C9B273)', border: '2px solid #A8924f' }}
+              whileTap={{ scale: 0.9 }} layout onClick={() => handleTile(tile)}>{tile.word}</motion.button>
           ))}
         </div>
 
-        {/* Check button */}
         {placed.length === round.words.length && (
           <motion.button
-            className="w-full max-w-sm bg-grass text-white font-fredoka text-2xl py-5 rounded-2xl shadow-lg"
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={handleCheck}
-          >Check! ✅</motion.button>
+            className="btn-primary w-full flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg,#56C271,#2E7D32)' }}
+            whileTap={{ scale: 0.95 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            onClick={handleCheck}>
+            <CheckIcon size={24} circle={false} /> Check!
+          </motion.button>
         )}
       </div>
-    </div>
+    </ActivityScene>
   )
 }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getSessionHistory, getMasteredWords, getRecentSessions, getProgress, getProfile, getAllProfiles, getSettings, updateSettings } from '../lib/db'
 import { getActiveProfileId } from '../lib/session'
+import { BackIcon } from '../components/icons'
 
 const CORRECT_PIN = '1234'
 
@@ -25,9 +26,10 @@ function PINEntry({ onCorrect }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-midnight to-ocean flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6"
+      style={{ background: 'linear-gradient(to bottom, #0D1B2A, #0D47A1)' }}>
       <h1 className="font-fredoka text-4xl text-white mb-2">Parent Dashboard</h1>
-      <p className="font-nunito text-white/60 mb-8">Enter your 4-digit PIN</p>
+      <p className="font-nunito font-600 text-white/70 mb-8">Enter your 4-digit PIN</p>
 
       <div className="flex gap-4 mb-8">
         {[0,1,2,3].map(i => (
@@ -127,9 +129,9 @@ export default function ParentDashboard() {
   return (
     <div className="min-h-screen bg-sand flex flex-col">
       {/* Header */}
-      <div className="bg-midnight text-white px-5 py-4 flex items-center justify-between">
-        <motion.button className="w-12 h-12 flex items-center justify-center rounded-xl bg-white/10 text-xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/home')}>←</motion.button>
+      <div className="text-white px-5 py-4 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #0D1B2A, #1B6CA8)' }}>
+        <motion.button className="w-12 h-12 flex items-center justify-center rounded-xl bg-white/15"
+          whileTap={{ scale: 0.9 }} onClick={() => navigate('/home')} aria-label="Back"><BackIcon size={26} /></motion.button>
         <h1 className="font-fredoka text-2xl">Parent Dashboard</h1>
         <div className="w-12" />
       </div>

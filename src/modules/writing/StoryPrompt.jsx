@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
+import { ArrowRightIcon } from '../../components/icons'
 import { useSound } from '../../hooks/useSound'
 import { saveWritingSubmission } from '../../lib/db'
-import { useNavigate } from 'react-router-dom'
 
 const PROMPTS = [
   { scene: '🏖️', text: 'Stitch found something on the beach today. What was it?' },
@@ -17,7 +19,6 @@ const PROMPTS = [
 ]
 
 export default function StoryPrompt({ onComplete, profile }) {
-  const navigate = useNavigate()
   const [promptIndex] = useState(Math.floor(Math.random() * PROMPTS.length))
   const [text, setText] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -36,80 +37,49 @@ export default function StoryPrompt({ onComplete, profile }) {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-ocean/20 to-blue-50 flex flex-col items-center justify-center p-6">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: [0, 1.2, 1] }}
-          transition={{ duration: 0.6 }}
-        >
-          <Stitch pose="dance" size={160} />
-        </motion.div>
-        <h2 className="font-fredoka text-4xl text-ocean mt-4">Amazing Story!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2 text-center">
-          Stitch loved your story! It's saved in your Story Book!
-        </p>
-        <div className="bg-white rounded-2xl p-5 mt-4 w-full max-w-sm shadow-md">
-          <p className="font-nunito text-sm text-ocean italic mb-2">{prompt.text}</p>
-          <p className="font-nunito text-base text-midnight">{text}</p>
-        </div>
-        <motion.button
-          className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl shadow-lg"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onComplete(100, false)}
-        >Collect 70 XP! ⭐</motion.button>
-      </div>
+      <CompletionScreen subject="writing" title="Amazing Story!" xp={70} buttonLabel="Collect 70 XP!"
+        onCollect={() => onComplete(100, false)} />
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ocean/20 to-blue-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-ocean/20 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/writing')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Story Prompt</div>
-        <div className="text-2xl">✍️</div>
-      </div>
+    <ActivityScene
+      subject="writing" title="Story Prompt" backRoute="/learn/writing"
+      stitchPose="writing" stitchSize={96}
+      message="I have a notebook for you! Write me a story.">
 
-      <div className="flex-1 flex flex-col p-6 gap-4">
-        {/* Scene illustration */}
-        <div className="flex items-center gap-4 bg-ocean/10 rounded-2xl p-4">
-          <span className="text-6xl">{prompt.scene}</span>
-          <Stitch pose="idle" size={80} />
-        </div>
-
-        {/* Prompt */}
-        <div className="bg-white rounded-2xl p-5 shadow-md">
-          <h2 className="font-fredoka text-2xl text-ocean mb-1">Your Writing Prompt</h2>
-          <p className="font-nunito text-xl text-midnight leading-relaxed">{prompt.text}</p>
-        </div>
-
-        {/* Writing area */}
-        <div className="flex-1 relative">
-          <textarea
-            value={text}
-            onChange={e => setText(e.target.value)}
-            placeholder="Write your answer here... (1 or 2 sentences is great!)"
-            className="w-full h-full min-h-[160px] font-nunito text-xl text-midnight
-              border-3 border-ocean/30 rounded-2xl p-4 resize-none focus:outline-none
-              focus:border-ocean bg-white shadow-md leading-relaxed"
-            style={{ lineHeight: 1.7 }}
-            maxLength={500}
-          />
-          <div className="absolute bottom-3 right-3 font-nunito text-xs text-midnight/30">
-            {text.length}/500
+      <div className="flex flex-col gap-4 max-w-md mx-auto">
+        {/* Prompt with scene */}
+        <div className="glass rounded-2xl p-5 flex items-start gap-3">
+          <span className="text-5xl shrink-0">{prompt.scene}</span>
+          <div>
+            <h2 className="font-fredoka text-lg text-white text-shadow-soft mb-0.5">Your Writing Prompt</h2>
+            <p className="instruction-text text-white/95">{prompt.text}</p>
           </div>
         </div>
 
+        {/* Notebook-paper writing area */}
+        <div className="relative">
+          <textarea
+            value={text} onChange={e => setText(e.target.value)}
+            placeholder="Write your answer here... (1 or 2 sentences is great!)"
+            className="w-full min-h-[180px] font-nunito text-xl text-midnight rounded-2xl p-4 resize-none
+              focus:outline-none focus:border-ocean shadow-card leading-relaxed"
+            style={{ lineHeight: '32px',
+              background: 'repeating-linear-gradient(#FFFDF6, #FFFDF6 31px, #Bcdcef 32px)',
+              border: '3px solid #D9C79a' }}
+            maxLength={500} />
+          <div className="absolute bottom-3 right-3 font-nunito text-xs text-midnight/40">{text.length}/500</div>
+        </div>
+
         <motion.button
-          className={`w-full bg-ocean text-white font-fredoka text-2xl py-5 rounded-2xl shadow-lg
-            ${!text.trim() ? 'opacity-50' : ''}`}
+          className={`btn-primary w-full flex items-center justify-center gap-2 ${!text.trim() ? 'opacity-50' : ''}`}
+          style={{ background: 'linear-gradient(135deg,#9C5FD0,#7B1FA2)' }}
           disabled={!text.trim() || saving}
-          whileTap={{ scale: text.trim() ? 0.95 : 1 }}
-          onClick={handleSubmit}
-        >
-          {saving ? '⏳ Saving...' : 'Submit My Story! 🚀'}
+          whileTap={{ scale: text.trim() ? 0.95 : 1 }} onClick={handleSubmit}>
+          {saving ? 'Saving...' : <>Submit My Story! <ArrowRightIcon size={22} /></>}
         </motion.button>
       </div>
-    </div>
+    </ActivityScene>
   )
 }

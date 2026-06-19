@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import Stitch from '../../components/characters/Stitch'
+import { motion } from 'framer-motion'
+import ActivityScene from '../../components/world/ActivityScene'
+import CompletionScreen from '../../components/ui/CompletionScreen'
+import { CheckIcon } from '../../components/icons'
 import { useSound } from '../../hooks/useSound'
-import { useNavigate } from 'react-router-dom'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
 export default function WordBuilder({ level, onComplete }) {
-  const navigate = useNavigate()
   const [words, setWords] = useState([])
   const [current, setCurrent] = useState(0)
   const [built, setBuilt] = useState([])
@@ -89,90 +89,60 @@ export default function WordBuilder({ level, onComplete }) {
     const pct = Math.round((score / words.length) * 100)
     const perfect = score === words.length
     return (
-      <div className="min-h-screen bg-gradient-to-b from-coral/20 to-red-50 flex flex-col items-center justify-center p-6">
-        <Stitch pose="dance" size={160} />
-        <h2 className="font-fredoka text-4xl text-coral mt-4">Words Built!</h2>
-        <p className="font-nunito text-xl text-midnight mt-2">{score}/{words.length} correct</p>
-        <motion.button
-          className="mt-8 bg-ocean text-white font-fredoka text-2xl px-10 py-4 rounded-2xl shadow-lg"
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onComplete(pct, perfect)}
-        >Collect {perfect ? 65 : 50} XP! ⭐</motion.button>
-      </div>
+      <CompletionScreen subject="phonics" title="Words Built!" score={score} total={words.length}
+        perfect={perfect} xp={perfect ? 65 : 50} onCollect={() => onComplete(pct, perfect)} />
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-coral/20 to-red-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 bg-white/50">
-        <motion.button className="w-14 h-14 flex items-center justify-center rounded-2xl bg-coral/20 text-2xl"
-          whileTap={{ scale: 0.9 }} onClick={() => navigate('/learn/phonics')}>←</motion.button>
-        <div className="font-fredoka text-xl text-midnight">Word Builder</div>
-        <div className="font-nunito text-sm text-midnight/60">{current + 1} / {words.length}</div>
-      </div>
+    <ActivityScene
+      subject="phonics" title="Word Builder" backRoute="/learn/phonics"
+      current={current} total={words.length}
+      stitchPose={stitchPose} stitchSize={84}
+      message="Build the word for this picture!">
 
-      <div className="w-full bg-gray-200 h-2">
-        <div className="bg-coral h-2 transition-all" style={{ width: `${((current + 1) / words.length) * 100}%` }} />
-      </div>
-
-      <div className="flex-1 flex flex-col items-center p-6 gap-6">
-        <div className="flex items-center gap-4">
-          <Stitch pose={stitchPose} size={80} />
-          <div className="bg-white rounded-2xl px-4 py-3 shadow-md">
-            <p className="font-nunito text-sm text-midnight">
-              Build the word for: <span className="font-fredoka text-2xl text-ocean">{level.pictures?.[word] || '📝'}</span>
-            </p>
-          </div>
-        </div>
-
+      <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
         {/* Picture clue */}
         <div className="text-8xl">{level.pictures?.[word] || '📝'}</div>
 
-        {/* Built word slots */}
-        <motion.div
-          className="flex gap-3 justify-center"
-          animate={shake ? { x: [-8, 8, -8, 8, 0] } : {}}
-          transition={{ duration: 0.4 }}
-        >
+        {/* Sandcastle wall slots */}
+        <motion.div className="flex gap-3 justify-center"
+          animate={shake ? { x: [-8, 8, -8, 8, 0] } : {}} transition={{ duration: 0.4 }}>
           {built.map((tile, i) => (
             <motion.button key={i}
-              className={`w-14 h-14 rounded-xl border-3 flex items-center justify-center
-                font-fredoka text-2xl text-midnight
-                ${tile ? 'bg-sky/30 border-ocean' : 'bg-white border-dashed border-gray-300'}`}
-              whileTap={{ scale: tile ? 0.9 : 1 }}
-              onClick={() => tile && handleRemove(i)}
-              animate={tile && submitted ? { backgroundColor: '#56C271', color: 'white' } : {}}
-            >
+              className={`w-14 h-16 flex items-center justify-center font-fredoka text-2xl
+                ${tile ? 'text-white' : 'text-midnight/40 border-dashed'}`}
+              style={{ borderRadius: '8px 8px 4px 4px',
+                background: tile ? (submitted ? '#56C271' : 'linear-gradient(160deg,#F0C987,#D4A35A)') : 'rgba(255,255,255,0.5)',
+                border: tile ? '2px solid #B07D45' : '2px dashed rgba(0,0,0,0.25)' }}
+              whileTap={{ scale: tile ? 0.9 : 1 }} onClick={() => tile && handleRemove(i)}>
               {tile?.char.toUpperCase() || ''}
             </motion.button>
           ))}
         </motion.div>
 
-        {/* Available tiles */}
+        {/* Letter flags */}
         <div className="flex flex-wrap gap-3 justify-center">
           {available.map(tile => (
             <motion.button key={tile.id}
-              className="w-14 h-14 bg-ocean text-white rounded-xl font-fredoka text-2xl shadow-md"
-              whileTap={{ scale: 0.9 }}
-              layout
-              onClick={() => handleTile(tile)}
-            >
+              className="relative w-14 h-14 text-white rounded-xl font-fredoka text-2xl shadow-card"
+              style={{ background: 'linear-gradient(160deg,#FF8E53,#FF6B6B)' }}
+              whileTap={{ scale: 0.9 }} layout onClick={() => handleTile(tile)}>
               {tile.char.toUpperCase()}
             </motion.button>
           ))}
         </div>
 
-        {/* Submit button */}
         {!built.some(b => b === null) && !submitted && (
           <motion.button
-            className="bg-grass text-white font-fredoka text-2xl px-10 py-4 rounded-2xl shadow-lg w-full max-w-sm"
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={handleSubmit}
-          >Check! ✅</motion.button>
+            className="btn-primary w-full flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg,#56C271,#2E7D32)' }}
+            whileTap={{ scale: 0.95 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            onClick={handleSubmit}>
+            <CheckIcon size={24} circle={false} /> Check!
+          </motion.button>
         )}
       </div>
-    </div>
+    </ActivityScene>
   )
 }

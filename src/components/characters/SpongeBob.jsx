@@ -50,12 +50,18 @@ export default function SpongeBob({ size = 100, pose = 'idle', className = '' })
         {/* Nose */}
         <ellipse cx="50" cy="52" rx="3" ry="5" fill="#d4a017" />
 
-        {/* Big smile */}
-        <path d={pose === 'happy' ? 'M 30 62 Q 50 76 70 62' : 'M 32 62 Q 50 72 68 62'}
-          fill="none" stroke="#8B6914" strokeWidth="2.5" strokeLinecap="round" />
-        {/* Teeth */}
-        <rect x="38" y="62" width="8" height="7" rx="1" fill="white" stroke="#c9a227" strokeWidth="0.5" />
-        <rect x="46" y="62" width="8" height="7" rx="1" fill="white" stroke="#c9a227" strokeWidth="0.5" />
+        {/* Mouth */}
+        {pose === 'surprised' ? (
+          <ellipse cx="50" cy="66" rx="9" ry="11" fill="#8B6914" />
+        ) : (
+          <>
+            <path d={pose === 'happy' ? 'M 30 62 Q 50 76 70 62' : 'M 32 62 Q 50 72 68 62'}
+              fill="none" stroke="#8B6914" strokeWidth="2.5" strokeLinecap="round" />
+            {/* Teeth */}
+            <rect x="38" y="62" width="8" height="7" rx="1" fill="white" stroke="#c9a227" strokeWidth="0.5" />
+            <rect x="46" y="62" width="8" height="7" rx="1" fill="white" stroke="#c9a227" strokeWidth="0.5" />
+          </>
+        )}
 
         {/* Arms */}
         <rect x="4" y="62" width="16" height="8" rx="4" fill="#FFE135" stroke="#c9a227" strokeWidth="1" />

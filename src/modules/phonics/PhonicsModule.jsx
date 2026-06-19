@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import TopBar from '../../components/layout/TopBar'
-import Stitch from '../../components/characters/Stitch'
+import ActivityScene from '../../components/world/ActivityScene'
+import ActivityChooserCard from '../../components/ui/ActivityChooserCard'
 import SoundMatching from './SoundMatching'
 import WordBuilder from './WordBuilder'
 import SortIt from './SortIt'
@@ -13,13 +11,12 @@ import { XP_VALUES } from '../../hooks/useXP'
 import { PHONICS_LEVELS } from '../../data/phonicsLevels'
 
 const ACTIVITIES = [
-  { id: 'sound_matching', label: 'Sound Matching', emoji: '🔊', desc: 'Listen and match the sound!' },
-  { id: 'word_builder', label: 'Word Builder', emoji: '🧱', desc: 'Build words with letter tiles!' },
-  { id: 'sort_it', label: 'Sort It!', emoji: '🗂️', desc: 'Sort words into groups!' },
+  { id: 'sound_matching', label: 'Sound Matching', desc: 'Listen and match the sound!' },
+  { id: 'word_builder', label: 'Word Builder', desc: 'Build words with letter tiles!' },
+  { id: 'sort_it', label: 'Sort It!', desc: 'Sort words into groups!' },
 ]
 
 export default function PhonicsModule() {
-  const navigate = useNavigate()
   const { profile } = useProfile()
   const { progress, addXP } = useProgress()
   const [activity, setActivity] = useState(null)
@@ -40,41 +37,24 @@ export default function PhonicsModule() {
   if (activity === 'sort_it') return <SortIt level={phonicsLevel} onComplete={handleComplete} profile={profile} progress={progress} />
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-coral/20 to-red-50 flex flex-col">
-      <TopBar profile={profile} progress={progress} showBack backRoute="/home" title="🔤 Phonics" />
+    <ActivityScene
+      subject="phonics"
+      message={`Welcome to Sound Beach! Level ${phonicsLevel.level}: ${phonicsLevel.name}. Pick a game!`}
+      stitchPose="happy" stitchSize={110}>
 
-      <div className="flex-1 p-6">
-        {/* Level info */}
-        <div className="bg-coral/20 rounded-2xl p-4 mb-6 flex items-center gap-4">
-          <Stitch pose="idle" size={70} />
-          <div>
-            <div className="font-fredoka text-xl text-coral">Level {phonicsLevel.level}: {phonicsLevel.name}</div>
-            <div className="font-nunito text-sm text-midnight/70">{phonicsLevel.description}</div>
-            <div className="font-nunito text-sm text-midnight/50 mt-1">Pattern: {phonicsLevel.pattern}</div>
-          </div>
-        </div>
-
-        <h2 className="font-fredoka text-2xl text-midnight mb-4">Choose an activity</h2>
-        <div className="flex flex-col gap-4">
-          {ACTIVITIES.map((act, i) => (
-            <motion.button key={act.id}
-              className="bg-white rounded-2xl p-5 shadow-md flex items-center gap-4 text-left active:scale-98"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setActivity(act.id)}
-            >
-              <span className="text-4xl">{act.emoji}</span>
-              <div>
-                <div className="font-fredoka text-xl text-midnight">{act.label}</div>
-                <div className="font-nunito text-sm text-midnight/60">{act.desc}</div>
-              </div>
-              <span className="ml-auto text-2xl">→</span>
-            </motion.button>
-          ))}
-        </div>
+      <div className="glass rounded-3xl px-4 py-3 mb-4">
+        <div className="font-fredoka text-white text-shadow-soft">Level {phonicsLevel.level}: {phonicsLevel.name}</div>
+        <div className="font-nunito font-600 text-white/85 text-sm">{phonicsLevel.description}</div>
+        <div className="font-nunito text-white/70 text-xs mt-0.5">Pattern: {phonicsLevel.pattern}</div>
       </div>
-    </div>
+
+      <h2 className="font-fredoka text-xl text-white mb-3 text-shadow-soft">Choose a game</h2>
+      <div className="flex flex-col gap-3">
+        {ACTIVITIES.map((act, i) => (
+          <ActivityChooserCard key={act.id} subject="phonics" index={i}
+            label={act.label} desc={act.desc} onClick={() => setActivity(act.id)} />
+        ))}
+      </div>
+    </ActivityScene>
   )
 }
