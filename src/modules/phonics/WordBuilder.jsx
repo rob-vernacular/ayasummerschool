@@ -3,7 +3,9 @@ import { motion } from 'framer-motion'
 import ActivityScene from '../../components/world/ActivityScene'
 import CompletionScreen from '../../components/ui/CompletionScreen'
 import { CheckIcon } from '../../components/icons'
+import SpeakerButton from '../../components/ui/SpeakerButton'
 import { useSound } from '../../hooks/useSound'
+import { useSpeech } from '../../hooks/useSpeech'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
@@ -18,6 +20,7 @@ export default function WordBuilder({ level, onComplete }) {
   const [score, setScore] = useState(0)
   const [submitted, setSubmitted] = useState(false)
   const { correct: playCorrect, wrong: playWrong, storyComplete } = useSound(true)
+  const { speakWord, speakLetter } = useSpeech()
 
   useEffect(() => {
     const w = shuffle(level.words).slice(0, 8)
@@ -40,6 +43,7 @@ export default function WordBuilder({ level, onComplete }) {
 
   const handleTile = (tile) => {
     if (submitted) return
+    speakLetter(tile.char)
     // Find first empty slot
     const emptyIndex = built.findIndex(b => b === null)
     if (emptyIndex === -1) return
@@ -64,6 +68,7 @@ export default function WordBuilder({ level, onComplete }) {
     const attempt = built.map(b => b.char).join('')
     if (attempt === word) {
       playCorrect()
+      speakWord(word)
       setStitchPose('happy')
       setSubmitted(true)
       setScore(s => s + 1)
@@ -102,15 +107,18 @@ export default function WordBuilder({ level, onComplete }) {
       message="Build the word for this picture!">
 
       <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
-        {/* Picture clue */}
-        <div className="text-8xl">{level.pictures?.[word] || '📝'}</div>
+        {/* Picture clue + hear-the-word */}
+        <div className="flex items-center gap-3">
+          <div className="text-8xl">{level.pictures?.[word] || '📝'}</div>
+          <SpeakerButton key={word} text={word} mode="word" size="md" autoSpeak />
+        </div>
 
         {/* Sandcastle wall slots */}
         <motion.div className="flex gap-3 justify-center"
           animate={shake ? { x: [-8, 8, -8, 8, 0] } : {}} transition={{ duration: 0.4 }}>
           {built.map((tile, i) => (
             <motion.button key={i}
-              className={`w-14 h-16 flex items-center justify-center font-fredoka text-2xl
+              className={`w-16 h-20 flex items-center justify-center font-fredoka text-4xl
                 ${tile ? 'text-white' : 'text-midnight/40 border-dashed'}`}
               style={{ borderRadius: '8px 8px 4px 4px',
                 background: tile ? (submitted ? '#56C271' : 'linear-gradient(160deg,#F0C987,#D4A35A)') : 'rgba(255,255,255,0.5)',
@@ -125,7 +133,7 @@ export default function WordBuilder({ level, onComplete }) {
         <div className="flex flex-wrap gap-3 justify-center">
           {available.map(tile => (
             <motion.button key={tile.id}
-              className="relative w-14 h-14 text-white rounded-xl font-fredoka text-2xl shadow-card"
+              className="relative w-16 h-16 text-white rounded-xl font-fredoka text-4xl shadow-card"
               style={{ background: 'linear-gradient(160deg,#FF8E53,#FF6B6B)' }}
               whileTap={{ scale: 0.9 }} layout onClick={() => handleTile(tile)}>
               {tile.char.toUpperCase()}

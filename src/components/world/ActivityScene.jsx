@@ -67,8 +67,8 @@ export default function ActivityScene({
         <div className="relative z-10 flex items-end gap-2 px-4 pt-3">
           <div className="shrink-0 anim-float-slow"><Stitch pose={stitchPose} size={stitchSize} /></div>
           {message && (
-            <SpeechBubble className="mb-3 flex-1 max-w-[260px]" tail="left" animateKey={message}>
-              <p className="font-nunito font-700 text-[15px] text-midnight leading-snug">{message}</p>
+            <SpeechBubble className="mb-3 flex-1 max-w-[280px]" tail="left" animateKey={message}>
+              <p className="bubble-text text-midnight">{message}</p>
             </SpeechBubble>
           )}
         </div>

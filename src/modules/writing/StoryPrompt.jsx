@@ -4,6 +4,7 @@ import Stitch from '../../components/characters/Stitch'
 import ActivityScene from '../../components/world/ActivityScene'
 import CompletionScreen from '../../components/ui/CompletionScreen'
 import { ArrowRightIcon } from '../../components/icons'
+import SpeakerButton from '../../components/ui/SpeakerButton'
 import { useSound } from '../../hooks/useSound'
 import { saveWritingSubmission } from '../../lib/db'
 
@@ -52,8 +53,11 @@ export default function StoryPrompt({ onComplete, profile }) {
         {/* Prompt with scene */}
         <div className="glass rounded-2xl p-5 flex items-start gap-3">
           <span className="text-5xl shrink-0">{prompt.scene}</span>
-          <div>
-            <h2 className="font-fredoka text-lg text-white text-shadow-soft mb-0.5">Your Writing Prompt</h2>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="font-fredoka text-lg text-white text-shadow-soft">Your Writing Prompt</h2>
+              <SpeakerButton text={prompt.text} mode="sentence" size="sm" autoSpeak />
+            </div>
             <p className="instruction-text text-white/95">{prompt.text}</p>
           </div>
         </div>

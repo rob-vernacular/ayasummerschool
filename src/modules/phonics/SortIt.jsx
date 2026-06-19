@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ActivityScene from '../../components/world/ActivityScene'
 import CompletionScreen from '../../components/ui/CompletionScreen'
+import SpeakerButton from '../../components/ui/SpeakerButton'
 import { useSound } from '../../hooks/useSound'
+import { useSpeech } from '../../hooks/useSpeech'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
@@ -17,6 +19,7 @@ export default function SortIt({ level, onComplete }) {
   const [stitchPose, setStitchPose] = useState('idle')
   const [feedback, setFeedback] = useState(null)
   const { correct: playCorrect, wrong: playWrong, storyComplete } = useSound(true)
+  const { speakWord } = useSpeech()
 
   const catA = level.sortCategories?.[0] || { label: 'Group A', words: level.words.slice(0, 5) }
   const catB = level.sortCategories?.[1] || { label: 'Group B', words: level.words.slice(5, 10) }
@@ -79,13 +82,16 @@ export default function SortIt({ level, onComplete }) {
       message={feedback ? feedback.msg : 'Which treasure chest does this word belong in?'}>
 
       <div className="flex flex-col items-center gap-5 max-w-sm mx-auto">
-        {/* Word on a coin */}
-        <motion.div key={currentWord}
-          className="font-fredoka text-4xl text-[#6b4a12] px-10 py-6 rounded-full shadow-card"
-          style={{ background: 'radial-gradient(circle at 38% 32%, #FFE9A8, #E6B53C)', border: '4px solid #C9962B' }}
-          initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-          {currentWord}
-        </motion.div>
+        {/* Word on a coin + hear-the-word */}
+        <div className="flex items-center gap-3">
+          <motion.div key={currentWord}
+            className="font-fredoka text-4xl text-[#6b4a12] px-10 py-6 rounded-full shadow-card"
+            style={{ background: 'radial-gradient(circle at 38% 32%, #FFE9A8, #E6B53C)', border: '4px solid #C9962B' }}
+            initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+            {currentWord}
+          </motion.div>
+          <SpeakerButton key={currentWord} text={currentWord} mode="word" size="md" autoSpeak />
+        </div>
 
         {/* Treasure chests */}
         <div className="grid grid-cols-2 gap-4 w-full">

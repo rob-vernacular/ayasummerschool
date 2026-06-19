@@ -1,373 +1,337 @@
 import { motion } from 'framer-motion'
 
 /* ============================================================================
-   Stitch — original blue alien companion (not a reproduction of any character).
-   A single SVG component driven by a `pose` prop. Ten expressive poses, each
-   composed from shared anatomy parts (ears, eyes, mouth, arms, legs) so the
-   character stays consistent while the expression changes.
+   Stitch — original blue-grey alien companion (an original stylized SVG, not a
+   trace of any existing artwork). Rebuilt for correct proportions: very large
+   round head (~60% of height), huge near-black eyes, wide flat nose, big
+   wide-based ears with mauve inner lining, short stocky body.
 
-   Poses: idle | happy | excited | sad | thinking | wave | dance | celebrate
-          | reading | writing
-   Props: pose, size (px, default 200), className
+   `pose` prop drives 10 poses. viewBox 0 0 200 240.
    ========================================================================== */
 
 const C = {
-  body:      '#6C84C8',   // periwinkle blue-grey
-  shadow:    '#41568F',   // deep shade
-  light:     '#A8BCE8',   // highlight
-  innerEar:  '#C68FA8',   // mauve inner ear
-  belly:     '#C7E7F0',   // pale cyan belly / muzzle
-  iris:      '#2E78C2',   // thin blue eye rim
-  pupil:     '#0E1830',   // near-black eye
-  nose:      '#16223E',   // dark navy nose
-  mouth:     '#16223E',
-  tongue:    '#FF7B96',
+  body:      '#4A5C8A',
+  shadow:    '#2E3D6B',
+  light:     '#6B7DB3',
+  belly:     '#8B9DC3',
+  earOut:    '#3A4A7A',
+  earIn:     '#C4A0C0',
+  nose:      '#1A1A2E',
+  eye:       '#0A0A0A',
+  mouth:     '#1A1A2E',
+  claw:      '#2E3D6B',
+  tongue:    '#E8788F',
   tooth:     '#FFFFFF',
-  blush:     '#FF9EB5',
+  blush:     '#D98AA6',
 }
 
-/* ---- Per-pose configuration ------------------------------------------------ */
 const POSES = {
-  idle:      { eyes: 'open',     mouth: 'smile',   ears: 'up',    arms: 'down',   body: 'anim-breathe' },
-  happy:     { eyes: 'squint',   mouth: 'grin',    ears: 'perk',  arms: 'up',     body: 'anim-bounce-in', blush: true },
-  excited:   { eyes: 'wide',     mouth: 'open',    ears: 'perk',  arms: 'up',     body: 'anim-jump',      blush: true },
-  sad:       { eyes: 'sad',      mouth: 'frown',   ears: 'droop', arms: 'down',   body: '', slump: true },
-  thinking:  { eyes: 'upleft',   mouth: 'neutral', ears: 'up',    arms: 'chin',   body: '' },
-  wave:      { eyes: 'open',     mouth: 'smile',   ears: 'up',    arms: 'wave',   body: 'anim-breathe' },
-  dance:     { eyes: 'squint',   mouth: 'grin',    ears: 'perk',  arms: 'out',    body: 'anim-stitch-dance', blush: true },
-  celebrate: { eyes: 'closed',   mouth: 'bigGrin', ears: 'perk',  arms: 'up',     body: 'anim-jump',      blush: true },
-  reading:   { eyes: 'down',     mouth: 'neutral', ears: 'flat',  arms: 'book',   body: 'anim-breathe' },
-  writing:   { eyes: 'focus',    mouth: 'focus',   ears: 'flat',  arms: 'pencil', body: '' },
+  idle:      { ears: 0.12, eyes: 'open',   mouth: 'smile',   arms: 'down',   legs: 'stand', headTilt: 4,  anim: 'anim-breathe' },
+  happy:     { ears: 0,    eyes: 'squint', mouth: 'grin',    arms: 'up',     legs: 'stand', headTilt: 0,  anim: 'anim-bounce-in', blush: true },
+  excited:   { ears: 0,    eyes: 'wide',   mouth: 'o',       arms: 'spread', legs: 'jump',  headTilt: 0,  anim: 'anim-jump',      blush: true },
+  sad:       { ears: 1,    eyes: 'down',   mouth: 'frown',   arms: 'down',   legs: 'stand', headTilt: 0,  slump: true },
+  thinking:  { ears: 0.45, eyes: 'upleft', mouth: 'neutral', arms: 'chin',   legs: 'stand', headTilt: -4 },
+  wave:      { ears: 0.06, eyes: 'open',   mouth: 'smile',   arms: 'wave',   legs: 'stand', headTilt: 3,  anim: 'anim-breathe' },
+  dance:     { ears: 0,    eyes: 'squint', mouth: 'grin',    arms: 'spread', legs: 'dance', headTilt: 0,  anim: 'anim-stitch-dance', blush: true },
+  celebrate: { ears: 0,    eyes: 'closed', mouth: 'bigGrin', arms: 'up',     legs: 'jump',  headTilt: 0,  anim: 'anim-jump',      blush: true },
+  reading:   { ears: 0.5,  eyes: 'down',   mouth: 'neutral', arms: 'book',   legs: 'sit',   headTilt: 0,  anim: 'anim-breathe' },
+  writing:   { ears: 0.5,  eyes: 'down',   mouth: 'focus',   arms: 'pencil', legs: 'stand', headTilt: 0 },
 }
 
-/* ---- Eyes ------------------------------------------------------------------ */
-function Eye({ cx, cy, state }) {
-  // Happy / closed eyes are drawn as upward arcs (joyful squint)
+/* ---- Ear: large, broad base, pointed tip, splayed outward; droop 0..1 ----- */
+function Ear({ side, droop }) {
+  // Canonical LEFT ear (points up-and-out to the left); right is mirrored.
+  const bx = 74, by = 52            // base pivot on the head dome
+  const rot = -(14 + droop * 58)    // splayed outward at rest, drops flat when sad
+  const ear = (
+    <g transform={`rotate(${rot} ${bx} ${by})`}>
+      <path d="M 94 50 C 78 22, 50 -2, 28 -6 C 19 -7.5, 17 4, 25 17 C 42 41, 62 55, 80 62 Z"
+        fill={C.earOut} stroke={C.shadow} strokeWidth="2" strokeLinejoin="round" />
+      <path d="M 86 48 C 72 24, 50 8, 35 6 C 28 5, 27 12, 34 23 C 48 43, 63 53, 75 58 Z"
+        fill={C.earIn} />
+    </g>
+  )
+  return side === 'left' ? ear : <g transform="translate(200,0) scale(-1,1)">{ear}</g>
+}
+
+/* ---- Eye: huge near-black oval, inward top tilt, white highlights --------- */
+function Eye({ cx, cy, side, state }) {
+  const mir = side === 'left' ? 1 : -1
+
   if (state === 'squint' || state === 'closed') {
     return (
-      <path
-        d={`M ${cx - 15} ${cy + 3} Q ${cx} ${cy - 14} ${cx + 15} ${cy + 3}`}
-        fill="none" stroke={C.pupil} strokeWidth="5" strokeLinecap="round"
-      />
+      <path d={`M ${cx - 20} ${cy + 4} Q ${cx} ${cy - 16} ${cx + 20} ${cy + 4}`}
+        fill="none" stroke={C.eye} strokeWidth="6" strokeLinecap="round" />
     )
   }
 
-  // Pupil offset for directional looks
-  let dx = 0, dy = 0, scleraRy = 19
-  if (state === 'upleft') { dx = -4; dy = -5 }
-  if (state === 'down' || state === 'focus') { dy = 5 }
-  if (state === 'sad') { dy = 4; scleraRy = 16 }
-  if (state === 'wide') { scleraRy = 22 }
+  let rx = 21, ry = 25, dx = 0, dy = 0, lid = 0
+  if (state === 'wide')   { rx = 23; ry = 26 }
+  if (state === 'down')   { dy = 4; lid = 9 }
+  if (state === 'upleft') { dx = -3; dy = -4 }
 
   return (
-    <g>
-      <ellipse cx={cx} cy={cy} rx="16" ry={scleraRy} fill="#fff" />
-      {state === 'sad' && (
-        <path d={`M ${cx - 17} ${cy - 14} Q ${cx} ${cy - 22} ${cx + 17} ${cy - 14}`}
-          fill={C.body} stroke="none" />
-      )}
-      {/* thin blue rim */}
-      <ellipse cx={cx + dx} cy={cy + dy} rx="13" ry={Math.min(16, scleraRy - 1)} fill={C.iris} />
-      {/* big near-black eye */}
-      <ellipse cx={cx + dx} cy={cy + dy + 0.5} rx="11.5" ry={Math.min(14.5, scleraRy - 2.5)} fill={C.pupil} />
-      {/* highlights */}
-      <circle cx={cx + dx + 3.5} cy={cy + dy - 5} r="3.4" fill="#fff" />
-      <circle cx={cx + dx - 3.5} cy={cy + dy + 4} r="1.7" fill="#fff" opacity="0.7" />
+    <g transform={`rotate(${mir * 11} ${cx} ${cy})`}>
+      {/* thin lighter ring */}
+      <ellipse cx={cx} cy={cy} rx={rx + 1.8} ry={ry + 1.8} fill={C.light} opacity="0.8" />
+      <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={C.eye} />
+      {/* upper eyelid for downcast look */}
+      {lid > 0 && <path d={`M ${cx - rx - 2} ${cy - 4} Q ${cx} ${cy - ry - 4} ${cx + rx + 2} ${cy - 4} L ${cx + rx + 2} ${cy - ry} L ${cx - rx - 2} ${cy - ry} Z`} fill={C.body} />}
+      {/* highlights — large upper, tiny lower */}
+      <ellipse cx={cx + 6 + dx} cy={cy - 9 + dy} rx="5" ry="6.5" fill="#fff" />
+      <circle cx={cx + 2 + dx} cy={cy + 5 + dy} r="2.4" fill="#fff" />
     </g>
   )
 }
 
-/* ---- Mouth ----------------------------------------------------------------- */
+/* ---- Mouth ---------------------------------------------------------------- */
 function Mouth({ type }) {
-  const cx = 100, y = 112
+  const cx = 100, y = 138
   switch (type) {
     case 'grin':
       return (
         <g>
-          <path d={`M ${cx - 22} ${y} Q ${cx} ${y + 22} ${cx + 22} ${y}
-                    Q ${cx} ${y + 6} ${cx - 22} ${y} Z`} fill={C.mouth} />
-          <path d={`M ${cx - 16} ${y + 1} L ${cx + 16} ${y + 1} L ${cx + 13} ${y + 6}
-                    L ${cx - 13} ${y + 6} Z`} fill={C.tooth} />
+          <path d={`M ${cx - 26} ${y} Q ${cx} ${y + 24} ${cx + 26} ${y} Q ${cx} ${y + 8} ${cx - 26} ${y} Z`} fill={C.mouth} />
+          <path d={`M ${cx - 18} ${y + 1} L ${cx + 18} ${y + 1} L ${cx + 14} ${y + 7} L ${cx - 14} ${y + 7} Z`} fill={C.tooth} />
         </g>
       )
     case 'bigGrin':
       return (
         <g>
-          <path d={`M ${cx - 27} ${y - 2} Q ${cx} ${y + 30} ${cx + 27} ${y - 2}
-                    Q ${cx} ${y + 4} ${cx - 27} ${y - 2} Z`} fill={C.mouth} />
-          <path d={`M ${cx - 20} ${y} L ${cx + 20} ${y} L ${cx + 16} ${y + 7}
-                    L ${cx - 16} ${y + 7} Z`} fill={C.tooth} />
-          <ellipse cx={cx} cy={y + 16} rx="9" ry="6" fill={C.tongue} />
+          <path d={`M ${cx - 30} ${y - 2} Q ${cx} ${y + 32} ${cx + 30} ${y - 2} Q ${cx} ${y + 6} ${cx - 30} ${y - 2} Z`} fill={C.mouth} />
+          <path d={`M ${cx - 22} ${y} L ${cx + 22} ${y} L ${cx + 17} ${y + 8} L ${cx - 17} ${y + 8} Z`} fill={C.tooth} />
+          <ellipse cx={cx} cy={y + 17} rx="9" ry="6" fill={C.tongue} />
         </g>
       )
-    case 'open':
+    case 'o':
       return (
         <g>
-          <ellipse cx={cx} cy={y + 6} rx="14" ry="16" fill={C.mouth} />
-          <ellipse cx={cx} cy={y + 13} rx="7" ry="6" fill={C.tongue} />
+          <ellipse cx={cx} cy={y + 6} rx="13" ry="15" fill={C.mouth} />
+          <ellipse cx={cx} cy={y + 12} rx="7" ry="6" fill={C.tongue} />
         </g>
       )
     case 'frown':
-      return <path d={`M ${cx - 18} ${y + 12} Q ${cx} ${y - 2} ${cx + 18} ${y + 12}`}
-        fill="none" stroke={C.mouth} strokeWidth="4.5" strokeLinecap="round" />
+      return <path d={`M ${cx - 16} ${y + 10} Q ${cx} ${y - 4} ${cx + 16} ${y + 10}`} fill="none" stroke={C.mouth} strokeWidth="4.5" strokeLinecap="round" />
     case 'neutral':
-      return <path d={`M ${cx - 14} ${y + 4} Q ${cx} ${y + 8} ${cx + 14} ${y + 4}`}
-        fill="none" stroke={C.mouth} strokeWidth="4.5" strokeLinecap="round" />
+      return <path d={`M ${cx - 13} ${y + 3} Q ${cx} ${y + 8} ${cx + 13} ${y + 3}`} fill="none" stroke={C.mouth} strokeWidth="4.5" strokeLinecap="round" />
     case 'focus':
       return (
         <g>
-          <path d={`M ${cx - 12} ${y + 3} Q ${cx} ${y + 8} ${cx + 12} ${y + 3}`}
-            fill="none" stroke={C.mouth} strokeWidth="4.5" strokeLinecap="round" />
-          <ellipse cx={cx + 12} cy={y + 8} rx="6" ry="5" fill={C.tongue} />
+          <path d={`M ${cx - 11} ${y + 2} Q ${cx} ${y + 7} ${cx + 11} ${y + 2}`} fill="none" stroke={C.mouth} strokeWidth="4.5" strokeLinecap="round" />
+          <ellipse cx={cx + 12} cy={y + 7} rx="6" ry="5" fill={C.tongue} />
         </g>
       )
     case 'smile':
     default:
       return (
-        <g>
-          <path d={`M ${cx - 18} ${y} Q ${cx} ${y + 18} ${cx + 18} ${y}`}
-            fill="none" stroke={C.mouth} strokeWidth="4.5" strokeLinecap="round" />
-          <path d={`M ${cx - 9} ${y + 6} L ${cx + 9} ${y + 6} L ${cx + 7} ${y + 9}
-                    L ${cx - 7} ${y + 9} Z`} fill={C.tooth} />
-        </g>
+        <path d={`M ${cx - 17} ${y} Q ${cx} ${y + 16} ${cx + 17} ${y}`} fill="none" stroke={C.mouth} strokeWidth="4.5" strokeLinecap="round" />
       )
   }
 }
 
-/* ---- Ear — large, rounded, swept up-and-out with mauve inner lining -------- */
-function Ear({ side, state }) {
-  const mirror = side === 'left' ? 1 : -1   // left = viewer-left
-  // Outward lean of the ear (degrees from vertical). Bigger = more swept/drooped.
-  const rot = { up: 26, perk: 12, droop: 60, flat: 82 }[state] ?? 26
-  const bx = 100 + mirror * 24    // base sits on top of the head
-  const by = 48
-  return (
-    <g transform={`rotate(${mirror * rot} ${bx} ${by})`}>
-      {/* outer ear — broad rounded paddle with a wide domed top */}
-      <path
-        d={`M ${bx - 22} ${by + 4}
-            C ${bx - 33} ${by - 30}, ${bx - 31} ${by - 66}, ${bx - 14} ${by - 78}
-            Q ${bx + mirror * 2} ${by - 90}, ${bx + 16} ${by - 76}
-            C ${bx + 31} ${by - 64}, ${bx + 31} ${by - 30}, ${bx + 20} ${by + 6} Z`}
-        fill={C.body} stroke={C.shadow} strokeWidth="2.5" strokeLinejoin="round"
-      />
-      {/* mauve inner lining (fills most of the ear) */}
-      <path
-        d={`M ${bx - 13} ${by}
-            C ${bx - 22} ${by - 28}, ${bx - 20} ${by - 56}, ${bx - 7} ${by - 65}
-            Q ${bx + mirror * 1} ${by - 73}, ${bx + 9} ${by - 64}
-            C ${bx + 20} ${by - 55}, ${bx + 20} ${by - 28}, ${bx + 13} ${by + 1} Z`}
-        fill={C.innerEar}
-      />
-      {/* small notch on the viewer-right ear, like the reference */}
-      {side === 'right' && (
-        <path d={`M ${bx + 26} ${by - 46} q -10 6 0 11`} fill={C.shadow} opacity="0.9" />
-      )}
-    </g>
-  )
-}
-
-/* ---- Arm (held items + gestures handled per pose) -------------------------- */
-function Claws({ x, y, mirror = 1 }) {
+function Claws({ x, y, mir = 1 }) {
   x = Number(x); y = Number(y)
   return (
-    <g stroke={C.shadow} strokeWidth="1.6" strokeLinecap="round">
-      <line x1={x} y1={y} x2={x - mirror * 3} y2={y + 5} />
-      <line x1={x + mirror * 4} y1={y} x2={x + mirror * 3} y2={y + 6} />
-      <line x1={x + mirror * 8} y1={y} x2={x + mirror * 9} y2={y + 5} />
+    <g stroke={C.claw} strokeWidth="2" strokeLinecap="round">
+      <line x1={x} y1={y} x2={x - mir * 3} y2={y + 6} />
+      <line x1={x + mir * 5} y1={y} x2={x + mir * 4} y2={y + 7} />
+      <line x1={x + mir * 10} y1={y} x2={x + mir * 11} y2={y + 6} />
     </g>
   )
 }
 
-/* ============================================================================ */
 function StitchSVG({ pose }) {
   const cfg = POSES[pose] || POSES.idle
   const slumpY = cfg.slump ? 8 : 0
 
-  /* Arms vary the most by pose; render per arm-mode. */
   const renderArms = () => {
+    const arm = (cxA, cyA, rot, k) => (
+      <g key={k} transform={`rotate(${rot} ${cxA} ${cyA})`}>
+        <ellipse cx={cxA} cy={cyA} rx="14" ry="22" fill={C.body} stroke={C.shadow} strokeWidth="2" />
+        <ellipse cx={cxA} cy={cyA + 14} rx="11" ry="10" fill={C.light} opacity="0.5" />
+      </g>
+    )
     switch (cfg.arms) {
       case 'up':
-        return (
-          <>
-            <g transform="rotate(35 52 150)">
-              <ellipse cx="44" cy="120" rx="13" ry="22" fill={C.body} stroke={C.shadow} strokeWidth="2.5" />
-              <Claws x="40" y="100" mirror={1} />
-            </g>
-            <g transform="rotate(-35 148 150)">
-              <ellipse cx="156" cy="120" rx="13" ry="22" fill={C.body} stroke={C.shadow} strokeWidth="2.5" />
-              <Claws x="152" y="100" mirror={-1} />
-            </g>
-          </>
-        )
-      case 'out':
-        return (
-          <>
-            <ellipse cx="36" cy="150" rx="22" ry="12" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(-12 36 150)" />
-            <ellipse cx="164" cy="150" rx="22" ry="12" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(12 164 150)" />
-          </>
-        )
+        return (<>
+          <g transform="rotate(38 46 175)">{arm(40, 150, 0, 'l')}<Claws x="33" y="126" mir={1} /></g>
+          <g transform="rotate(-38 154 175)">{arm(160, 150, 0, 'r')}<Claws x="153" y="126" mir={-1} /></g>
+        </>)
+      case 'spread':
+        return (<>
+          <ellipse cx="34" cy="178" rx="22" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2" transform="rotate(-18 34 178)" />
+          <ellipse cx="166" cy="178" rx="22" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2" transform="rotate(18 166 178)" />
+        </>)
       case 'wave':
-        return (
-          <>
-            <ellipse cx="42" cy="152" rx="13" ry="22" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(-14 42 150)" />
-            <motion.g
-              style={{ transformBox: 'fill-box', transformOrigin: 'center bottom' }}
-              animate={{ rotate: [10, -22, 10, -22, 10] }}
-              transition={{ duration: 1.1, repeat: Infinity, repeatDelay: 0.4 }}
-            >
-              <ellipse cx="158" cy="124" rx="13" ry="23" fill={C.body} stroke={C.shadow} strokeWidth="2.5" />
-              <Claws x="154" y="104" mirror={-1} />
-            </motion.g>
-          </>
-        )
+        return (<>
+          {arm(42, 182, -14, 'l')}
+          <motion.g style={{ transformBox: 'fill-box', transformOrigin: 'center bottom' }}
+            animate={{ rotate: [12, -22, 12, -22, 12] }} transition={{ duration: 1.1, repeat: Infinity, repeatDelay: 0.4 }}>
+            {arm(160, 150, 0, 'r')}<Claws x="153" y="126" mir={-1} />
+          </motion.g>
+        </>)
       case 'chin':
-        return (
-          <>
-            <ellipse cx="40" cy="156" rx="13" ry="20" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(-10 40 152)" />
-            {/* hand to chin */}
-            <g transform="rotate(40 150 150)">
-              <ellipse cx="150" cy="132" rx="12" ry="20" fill={C.body} stroke={C.shadow} strokeWidth="2.5" />
-            </g>
-            <ellipse cx="118" cy="118" rx="11" ry="9" fill={C.body} stroke={C.shadow} strokeWidth="2.5" />
-          </>
-        )
+        return (<>
+          {arm(40, 184, -10, 'l')}
+          <g transform="rotate(46 150 178)">{arm(150, 158, 0, 'r')}</g>
+          <ellipse cx="120" cy="150" rx="12" ry="10" fill={C.body} stroke={C.shadow} strokeWidth="2" />
+        </>)
       case 'book':
-        return (
-          <>
-            <ellipse cx="46" cy="150" rx="13" ry="18" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(28 46 150)" />
-            <ellipse cx="154" cy="150" rx="13" ry="18" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(-28 154 150)" />
-          </>
-        )
+        return (<>
+          {arm(48, 178, 28, 'l')}
+          {arm(152, 178, -28, 'r')}
+        </>)
       case 'pencil':
-        return (
-          <>
-            <ellipse cx="44" cy="152" rx="13" ry="20" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(-12 44 150)" />
-            <g transform="rotate(-28 150 150)">
-              <ellipse cx="150" cy="138" rx="12" ry="20" fill={C.body} stroke={C.shadow} strokeWidth="2.5" />
-            </g>
-          </>
-        )
+        return (<>
+          {arm(44, 184, -12, 'l')}
+          <g transform="rotate(-30 150 178)">{arm(150, 166, 0, 'r')}</g>
+        </>)
       case 'down':
       default:
-        return (
-          <>
-            <ellipse cx="40" cy="152" rx="13" ry="22" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(-12 40 150)" />
-            <ellipse cx="160" cy="152" rx="13" ry="22" fill={C.body} stroke={C.shadow} strokeWidth="2.5" transform="rotate(12 160 150)" />
-            <Claws x="34" y="170" mirror={1} />
-            <Claws x="158" y="170" mirror={-1} />
-          </>
-        )
+        return (<>
+          {arm(40, 182, -12, 'l')}<Claws x="32" y="202" mir={1} />
+          {arm(160, 182, 12, 'r')}<Claws x="158" y="202" mir={-1} />
+        </>)
     }
   }
 
-  /* Held props in front of the body */
+  const renderLegs = () => {
+    switch (cfg.legs) {
+      case 'jump':
+        return (<>
+          <ellipse cx="76" cy="226" rx="18" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2" transform="rotate(-10 76 226)" />
+          <ellipse cx="124" cy="226" rx="18" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2" transform="rotate(10 124 226)" />
+        </>)
+      case 'dance':
+        return (<>
+          <ellipse cx="74" cy="236" rx="18" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2" />
+          <ellipse cx="128" cy="220" rx="18" ry="12" fill={C.body} stroke={C.shadow} strokeWidth="2" transform="rotate(24 128 220)" />
+        </>)
+      case 'sit':
+        return (<>
+          <ellipse cx="66" cy="232" rx="20" ry="12" fill={C.body} stroke={C.shadow} strokeWidth="2" />
+          <ellipse cx="134" cy="232" rx="20" ry="12" fill={C.body} stroke={C.shadow} strokeWidth="2" />
+        </>)
+      case 'stand':
+      default:
+        return (<>
+          <ellipse cx="76" cy="236" rx="19" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2" />
+          <ellipse cx="124" cy="236" rx="19" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2" />
+          <g stroke={C.claw} strokeWidth="2" strokeLinecap="round" opacity="0.8">
+            <line x1="68" y1="240" x2="66" y2="232" /><line x1="76" y1="241" x2="76" y2="232" /><line x1="84" y1="240" x2="86" y2="232" />
+            <line x1="116" y1="240" x2="114" y2="232" /><line x1="124" y1="241" x2="124" y2="232" /><line x1="132" y1="240" x2="134" y2="232" />
+          </g>
+        </>)
+    }
+  }
+
   const renderHeld = () => {
-    if (cfg.arms === 'book') {
-      return (
-        <g>
-          <rect x="62" y="140" width="76" height="48" rx="4" fill="#fff" stroke={C.shadow} strokeWidth="2" />
-          <line x1="100" y1="140" x2="100" y2="188" stroke={C.shadow} strokeWidth="2" />
-          <rect x="62" y="140" width="76" height="48" rx="4" fill="none" stroke="#C98A3A" strokeWidth="3" />
-          {[148, 156, 164, 172].map(yy => (
-            <g key={yy}>
-              <line x1="68" y1={yy} x2="94" y2={yy} stroke="#9DB0C0" strokeWidth="1.6" />
-              <line x1="106" y1={yy} x2="132" y2={yy} stroke="#9DB0C0" strokeWidth="1.6" />
-            </g>
-          ))}
-        </g>
-      )
-    }
-    if (cfg.arms === 'pencil') {
-      return (
-        <g transform="rotate(-28 150 150)">
-          <rect x="146" y="96" width="8" height="46" rx="2" fill="#FFC93C" stroke={C.shadow} strokeWidth="1.5" />
-          <path d="M 146 96 L 150 86 L 154 96 Z" fill="#F4A259" stroke={C.shadow} strokeWidth="1.2" />
-          <path d="M 148.5 90 L 150 86 L 151.5 90 Z" fill={C.pupil} />
-          <rect x="146" y="138" width="8" height="6" rx="1.5" fill="#FF7B96" />
-        </g>
-      )
-    }
+    if (cfg.arms === 'book') return (
+      <g>
+        <rect x="58" y="166" width="84" height="50" rx="4" fill="#fff" stroke={C.shadow} strokeWidth="2" />
+        <line x1="100" y1="166" x2="100" y2="216" stroke={C.shadow} strokeWidth="2" />
+        <rect x="58" y="166" width="84" height="50" rx="4" fill="none" stroke="#C98A3A" strokeWidth="3" />
+        {[176,184,192,200].map(yy => <g key={yy}><line x1="64" y1={yy} x2="92" y2={yy} stroke="#9DB0C0" strokeWidth="1.6" /><line x1="108" y1={yy} x2="136" y2={yy} stroke="#9DB0C0" strokeWidth="1.6" /></g>)}
+      </g>
+    )
+    if (cfg.arms === 'pencil') return (
+      <g transform="rotate(-30 150 170)">
+        <rect x="146" y="120" width="8" height="50" rx="2" fill="#FFC93C" stroke={C.shadow} strokeWidth="1.5" />
+        <path d="M146 120 L150 108 L154 120 Z" fill="#F4A259" stroke={C.shadow} strokeWidth="1.2" />
+        <path d="M148.5 113 L150 108 L151.5 113 Z" fill={C.nose} />
+        <rect x="146" y="166" width="8" height="6" rx="1.5" fill="#FF7B96" />
+      </g>
+    )
     return null
   }
 
   return (
-    <svg viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
+    <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" className="overflow-visible">
       <defs>
-        <radialGradient id="stitchBody" cx="40%" cy="32%" r="75%">
-          <stop offset="0%" stopColor={C.light} />
-          <stop offset="70%" stopColor={C.body} />
-          <stop offset="100%" stopColor={C.shadow} />
+        <radialGradient id="stHead" cx="42%" cy="36%" r="72%">
+          <stop offset="0%" stopColor={C.light} /><stop offset="68%" stopColor={C.body} /><stop offset="100%" stopColor={C.shadow} />
         </radialGradient>
-        <radialGradient id="stitchHead" cx="42%" cy="34%" r="72%">
-          <stop offset="0%" stopColor={C.light} />
-          <stop offset="72%" stopColor={C.body} />
-          <stop offset="100%" stopColor={C.shadow} />
+        <radialGradient id="stBody" cx="42%" cy="32%" r="78%">
+          <stop offset="0%" stopColor={C.light} /><stop offset="70%" stopColor={C.body} /><stop offset="100%" stopColor={C.shadow} />
         </radialGradient>
       </defs>
 
-      <g className={cfg.body} transform={`translate(0 ${slumpY})`} style={{ transformOrigin: '100px 200px' }}>
-        {/* Ears (behind head) */}
-        <Ear side="left" state={cfg.ears} />
-        <Ear side="right" state={cfg.ears} />
-
-        {/* Antenna nub */}
-        <line x1="100" y1="30" x2="100" y2="18" stroke={C.shadow} strokeWidth="3" strokeLinecap="round" />
-        <circle cx="100" cy="15" r="5" fill={C.light} stroke={C.shadow} strokeWidth="1.5" />
-
-        {/* Legs / feet (behind body) */}
-        <ellipse cx="74" cy="196" rx="18" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2.5" />
-        <ellipse cx="126" cy="196" rx="18" ry="13" fill={C.body} stroke={C.shadow} strokeWidth="2.5" />
-        <ellipse cx="74" cy="200" rx="11" ry="5" fill={C.belly} opacity="0.5" />
-        <ellipse cx="126" cy="200" rx="11" ry="5" fill={C.belly} opacity="0.5" />
-
-        {/* Arms behind/around body */}
+      <g className={cfg.anim || ''} transform={`translate(0 ${slumpY})`} style={{ transformOrigin: '100px 230px' }}>
+        {/* legs + arms behind body */}
+        {renderLegs()}
         {renderArms()}
 
-        {/* Body */}
-        <ellipse cx="100" cy="150" rx="56" ry="48" fill="url(#stitchBody)" stroke={C.shadow} strokeWidth="2.5" />
-        <ellipse cx="100" cy="158" rx="34" ry="34" fill={C.belly} opacity="0.6" />
+        {/* body — short, wide, stocky */}
+        <ellipse cx="100" cy="192" rx="64" ry="50" fill="url(#stBody)" stroke={C.shadow} strokeWidth="2.5" />
+        <ellipse cx="100" cy="198" rx="42" ry="36" fill={C.belly} opacity="0.7" />
+        {/* hint of the lower pair of arms tucked at the belly */}
+        <path d="M44 188 q -8 10 2 22" fill="none" stroke={C.shadow} strokeWidth="2" opacity="0.4" />
+        <path d="M156 188 q 8 10 -2 22" fill="none" stroke={C.shadow} strokeWidth="2" opacity="0.4" />
 
-        {/* Head */}
-        <ellipse cx="100" cy="78" rx="62" ry="56" fill="url(#stitchHead)" stroke={C.shadow} strokeWidth="2.5" />
-        {/* Face lighter patch */}
-        <ellipse cx="100" cy="92" rx="40" ry="30" fill={C.belly} opacity="0.45" />
+        {/* head group (tilts a touch by pose) */}
+        <g transform={`rotate(${cfg.headTilt || 0} 100 96)`}>
+          <Ear side="left" droop={cfg.ears} />
+          <Ear side="right" droop={cfg.ears} />
 
-        {/* Blush */}
-        {cfg.blush && (
-          <>
-            <ellipse cx="62" cy="96" rx="11" ry="7" fill={C.blush} opacity="0.55" />
-            <ellipse cx="138" cy="96" rx="11" ry="7" fill={C.blush} opacity="0.55" />
-          </>
-        )}
+          {/* huge round head */}
+          <ellipse cx="100" cy="92" rx="80" ry="74" fill="url(#stHead)" stroke={C.shadow} strokeWidth="2.5" />
+          {/* lighter lower-face patch */}
+          <ellipse cx="100" cy="118" rx="54" ry="40" fill={C.belly} opacity="0.5" />
 
-        {/* Eyes */}
-        <Eye cx={78} cy={74} state={cfg.eyes} />
-        <Eye cx={122} cy={74} state={cfg.eyes} />
+          {cfg.blush && (<>
+            <ellipse cx="50" cy="120" rx="12" ry="7" fill={C.blush} opacity="0.5" />
+            <ellipse cx="150" cy="120" rx="12" ry="7" fill={C.blush} opacity="0.5" />
+          </>)}
 
-        {/* Nose — large, rounded, navy, with a soft highlight + philtrum line */}
-        <path d="M 88 95 Q 100 86 112 95 Q 114 105 100 108 Q 86 105 88 95 Z" fill={C.nose} />
-        <ellipse cx="96" cy="94" rx="3.5" ry="2.2" fill="#42557e" opacity="0.7" />
-        <path d="M100 108 V112.5" stroke={C.nose} strokeWidth="2.5" strokeLinecap="round" />
+          {/* eyes — the signature feature */}
+          <Eye cx={68} cy={88} side="left" state={cfg.eyes} />
+          <Eye cx={132} cy={88} side="right" state={cfg.eyes} />
 
-        {/* Mouth */}
-        <Mouth type={cfg.mouth} />
+          {/* wide flat nose with two nostrils */}
+          <ellipse cx="100" cy="118" rx="17" ry="11" fill={C.nose} />
+          <ellipse cx="93" cy="120" rx="3" ry="3.6" fill="#000" opacity="0.55" />
+          <ellipse cx="107" cy="120" rx="3" ry="3.6" fill="#000" opacity="0.55" />
+          <ellipse cx="95" cy="114" rx="4" ry="2.4" fill={C.light} opacity="0.5" />
 
-        {/* Held props in front */}
+          {/* philtrum + mouth */}
+          <path d="M100 129 V134" stroke={C.nose} strokeWidth="2.5" strokeLinecap="round" />
+          <Mouth type={cfg.mouth} />
+        </g>
+
         {renderHeld()}
       </g>
     </svg>
   )
 }
 
+/* ---------------------------------------------------------------------------
+   Optional custom artwork. Drop image files into  src/assets/stitch/  and they
+   are used automatically (no other change needed):
+     • a single  stitch.png  → used for every pose, OR
+     • per-pose files named after the pose:  idle.png, happy.png, wave.png,
+       excited.png, sad.png, thinking.png, dance.png, celebrate.png,
+       reading.png, writing.png   (any missing pose falls back to stitch.png,
+       then to the built-in SVG).
+   Use transparent-background PNG/WebP. Only use artwork you have the right to use.
+   --------------------------------------------------------------------------- */
+const _customArt = import.meta.glob('../../assets/stitch/*.{png,jpg,jpeg,webp,svg}', { eager: true, import: 'default' })
+const ART = {}
+for (const [path, url] of Object.entries(_customArt)) {
+  const key = path.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase()
+  ART[key] = url
+}
+const ART_KEYS = Object.keys(ART)
+function artFor(pose) {
+  return ART[pose] || ART.default || ART.stitch || (ART_KEYS.length ? ART[ART_KEYS[0]] : null)
+}
+
 export default function Stitch({ pose = 'idle', size = 200, className = '' }) {
+  const src = artFor(pose)
   return (
-    <div
-      style={{ width: size, height: size * 1.05 }}
-      className={`select-none pointer-events-none ${className}`}
-      aria-hidden="true"
-    >
-      <StitchSVG pose={pose} />
+    <div style={{ width: size, height: size * 1.2 }} className={`select-none pointer-events-none ${className}`} aria-hidden="true">
+      {src
+        ? <img src={src} alt="" draggable="false" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        : <StitchSVG pose={pose} />}
     </div>
   )
 }

@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ActivityScene from '../../components/world/ActivityScene'
 import CompletionScreen from '../../components/ui/CompletionScreen'
+import SpeakerButton from '../../components/ui/SpeakerButton'
 import { useSound } from '../../hooks/useSound'
+import { useSpeech } from '../../hooks/useSpeech'
 import SENTENCES from '../../data/sentences'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
@@ -17,6 +19,7 @@ export default function SentenceFillIn({ onComplete, profile }) {
   const [feedback, setFeedback] = useState(null)
   const [attempts, setAttempts] = useState(0)
   const { correct: playCorrect, wrong: playWrong, storyComplete } = useSound(true)
+  const { speakWord } = useSpeech()
 
   useEffect(() => {
     const qs = shuffle(SENTENCES).slice(0, 10)
@@ -29,6 +32,7 @@ export default function SentenceFillIn({ onComplete, profile }) {
 
   const handleAnswer = (choice) => {
     if (selected) return
+    speakWord(choice)
     setSelected(choice)
     if (choice === q.word) {
       playCorrect()
@@ -80,7 +84,10 @@ export default function SentenceFillIn({ onComplete, profile }) {
           style={{ background: 'linear-gradient(160deg,#FFFDF2,#FDF3D0)', border: '2px solid #E3D08C',
             boxShadow: 'var(--shadow-card)' }}
           initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-          <p className="instruction-text text-2xl text-midnight" style={{ lineHeight: 1.7 }}>
+          <div className="flex justify-center mb-3">
+            <SpeakerButton key={current} text={q.sentence.replace('___', ', ,')} mode="sentence" size="md" autoSpeak />
+          </div>
+          <p className="sentence-text text-midnight">
             {q.sentence.split('___').map((part, i) => (
               <span key={i}>
                 {part}
@@ -105,7 +112,7 @@ export default function SentenceFillIn({ onComplete, profile }) {
             if (isSelected && !isCorrect) { bg = 'linear-gradient(160deg,#FFD6D6,#FFA9A9)'; ring = '#E53935'; text = '#B71C1C' }
             return (
               <motion.button key={choice}
-                className="font-fredoka text-2xl px-7 py-5 flex-1 min-w-[100px] shadow-card"
+                className="activity-word answer-card flex-1 shadow-card"
                 style={{ background: bg, color: text, border: `3px solid ${ring}`, borderRadius: '46% 46% 50% 50% / 60% 60% 40% 40%' }}
                 whileTap={{ scale: selected ? 1 : 0.92 }}
                 animate={isSelected && !isCorrect ? { x: [-5, 5, -3, 3, 0] } : {}}

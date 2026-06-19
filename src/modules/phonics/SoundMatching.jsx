@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ActivityScene from '../../components/world/ActivityScene'
 import CompletionScreen from '../../components/ui/CompletionScreen'
+import SpeakerButton from '../../components/ui/SpeakerButton'
 import { useSound } from '../../hooks/useSound'
+import { useSpeech } from '../../hooks/useSpeech'
 
 const CELEBRATE = ['Amazing!', 'You got it!', 'Super!', 'Stitch loves it!', 'Wow, wow, wow!', 'So smart!', 'Yes! Yes!']
 const ENCOURAGEMENT = ['Uh oh! Almost!', 'So close! Try again!', 'Stitch believes in you!', 'One more try!']
@@ -19,6 +21,7 @@ export default function SoundMatching({ level, onComplete, profile }) {
   const [feedback, setFeedback] = useState(null)
   const [done, setDone] = useState(false)
   const { correct: playCorrect, wrong: playWrong, storyComplete } = useSound(true)
+  const { speakWord } = useSpeech()
 
   useEffect(() => {
     // Only use words that have real pictures so the game is meaningful
@@ -47,6 +50,7 @@ export default function SoundMatching({ level, onComplete, profile }) {
 
     if (option === q.target) {
       playCorrect()
+      speakWord(q.target)
       setScore(s => s + 1)
       setStitchPose('happy')
       setFeedback({ type: 'correct', msg: CELEBRATE[Math.floor(Math.random() * CELEBRATE.length)] })
@@ -105,6 +109,9 @@ export default function SoundMatching({ level, onComplete, profile }) {
           key={current} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
           <div className="absolute inset-x-6 top-1/2 h-px bg-black/10" />
           <div className="text-8xl relative">{q.emoji}</div>
+          <div className="absolute top-2 right-2">
+            <SpeakerButton key={q.target} text={q.target} mode="word" size="md" autoSpeak />
+          </div>
         </motion.div>
 
         {/* Shell answer options */}
@@ -119,7 +126,7 @@ export default function SoundMatching({ level, onComplete, profile }) {
             if (isSelected && !isCorrect) { bg = 'linear-gradient(160deg, #FFD6D6, #FFA9A9)'; ring = '#E53935'; text = '#B71C1C' }
             return (
               <motion.button key={opt}
-                className="relative font-fredoka text-2xl py-6 shadow-card overflow-hidden"
+                className="answer-card activity-word relative shadow-card overflow-hidden"
                 style={{ background: bg, color: text, borderRadius: '46% 46% 50% 50% / 60% 60% 40% 40%', border: `3px solid ${ring}` }}
                 whileTap={{ scale: selected ? 1 : 0.93 }}
                 animate={isSelected && !isCorrect ? { x: [-6, 6, -4, 4, 0] } : {}}

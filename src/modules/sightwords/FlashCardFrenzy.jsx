@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ActivityScene from '../../components/world/ActivityScene'
 import CompletionScreen from '../../components/ui/CompletionScreen'
 import { CheckIcon } from '../../components/icons'
+import SpeakerButton from '../../components/ui/SpeakerButton'
 import { useSound } from '../../hooks/useSound'
+import { useSpeech } from '../../hooks/useSpeech'
 import { getSightWordMastery, updateSightWord } from '../../lib/db'
 import { PRE_PRIMER, PRIMER } from '../../data/sightwords'
 
@@ -21,6 +23,7 @@ export default function FlashCardFrenzy({ onComplete, profile }) {
   const [stitchPose, setStitchPose] = useState('idle')
   const timerRef = useRef(null)
   const { correct: playCorrect, wrong: playWrong, storyComplete } = useSound(true)
+  const { speakSentence } = useSpeech()
 
   const SENTENCES = {
     a: 'I want a cat.', and: 'Stitch and Luna play.', the: 'The fish is blue.',
@@ -74,6 +77,7 @@ export default function FlashCardFrenzy({ onComplete, profile }) {
   const handleHelp = async () => {
     clearInterval(timerRef.current)
     playWrong()
+    speakSentence(SENTENCES[words[current]] || `${words[current]}. Stitch loves this word!`)
     setStitchPose('sad')
     await updateSightWord(profile.id, words[current], false)
     next()
@@ -129,7 +133,8 @@ export default function FlashCardFrenzy({ onComplete, profile }) {
             initial={{ rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} exit={{ rotateY: -90, opacity: 0 }} transition={{ duration: 0.3 }}>
             <span className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-16 rounded-full bg-[#C9A24B]/50" />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-16 rounded-full bg-[#C9A24B]/50" />
-            <div className="font-fredoka text-6xl text-ocean">{word}</div>
+            <div className="flash-word text-ocean">{word}</div>
+            <div className="absolute top-2 right-2"><SpeakerButton key={word} text={word} mode="word" size="sm" autoSpeak /></div>
           </motion.div>
         </AnimatePresence>
 

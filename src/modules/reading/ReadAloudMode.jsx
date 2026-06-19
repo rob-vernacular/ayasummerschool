@@ -1,25 +1,51 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ActivityScene from '../../components/world/ActivityScene'
-import { CheckIcon, ArrowRightIcon } from '../../components/icons'
+import { CheckIcon, ArrowRightIcon, SoundOnIcon } from '../../components/icons'
 import { useSound } from '../../hooks/useSound'
+import { useSpeech, speechSupported } from '../../hooks/useSpeech'
+
+function wordIndexFromChar(text, charIndex) {
+  const before = text.slice(0, charIndex).match(/\S+/g)
+  return before ? before.length : 0
+}
 
 export default function ReadAloudMode({ story, onComplete }) {
   const [page, setPage] = useState(0)
   const [highlightWord, setHighlightWord] = useState(-1)
+  const [reading, setReading] = useState(false)
   const [showQuestions, setShowQuestions] = useState(false)
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [stitchPose, setStitchPose] = useState('idle')
   const { correct: playCorrect, wrong: playWrong, storyComplete } = useSound(true)
+  const { speakSentence, speakWord, stop } = useSpeech()
 
   const isLastPage = page === story.text.length - 1
 
+  const handleReadToMe = () => {
+    const sentence = story.text[page]
+    const u = speakSentence(sentence)
+    if (!u) return
+    setReading(true)
+    u.onboundary = (e) => {
+      if (e.name === 'word' || e.charIndex != null) {
+        setHighlightWord(wordIndexFromChar(sentence, e.charIndex))
+      }
+    }
+    u.onend = () => { setReading(false); setHighlightWord(-1) }
+    u.onerror = () => { setReading(false); setHighlightWord(-1) }
+  }
+
   const handleWordTap = (i) => {
+    const w = (story.text[page].split(' ')[i] || '').replace(/[^a-zA-Z']/g, '')
+    if (w) speakWord(w)
     setHighlightWord(i === highlightWord ? -1 : i)
   }
 
   const handleNext = () => {
+    stop()
+    setReading(false)
     if (isLastPage) {
       setShowQuestions(true)
     } else {
@@ -118,9 +144,21 @@ export default function ReadAloudMode({ story, onComplete }) {
                   whileTap={{ scale: 0.95 }} onClick={() => handleWordTap(i)}>{word}</motion.span>
               ))}
             </p>
-            <p className="font-nunito text-xs text-midnight/40 text-center mt-4">Tap words to highlight them</p>
+            <p className="font-nunito text-sm text-midnight/40 text-center mt-4">Tap a word to hear or highlight it</p>
           </motion.div>
         </AnimatePresence>
+
+        {/* Read to me */}
+        {speechSupported && (
+          <motion.button
+            className={`w-full flex items-center justify-center gap-3 font-fredoka text-2xl text-white py-4 rounded-2xl shadow-card
+              ${reading ? '' : 'anim-speaker-pulse'}`}
+            style={{ background: 'linear-gradient(135deg,#4FC3F7,#1B6CA8)' }}
+            whileTap={{ scale: 0.96 }} onClick={handleReadToMe}>
+            <SoundOnIcon size={28} />
+            {reading ? 'Reading…' : 'Read to me!'}
+          </motion.button>
+        )}
 
         <motion.button
           className="btn-primary w-full flex items-center justify-center gap-2"

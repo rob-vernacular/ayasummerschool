@@ -73,9 +73,9 @@
 
   .reading-text {
     font-family: 'Nunito', sans-serif;
-    font-weight: 400;
-    font-size: 24px;
-    line-height: 1.8;
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.9;
   }
 
   button, [role="button"] {
@@ -143,6 +143,57 @@
   }
 
   .text-shadow-soft { text-shadow: var(--shadow-text); }
+
+  /* ---- Larger, child-friendly activity typography ---- */
+  .activity-word {
+    font-family: 'Nunito', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  .answer-card {
+    min-height: 80px;
+    min-width: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px;
+  }
+
+  .flash-word {
+    font-family: 'Fredoka One', cursive;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--color-midnight);
+  }
+
+  .sentence-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .grid-letter {
+    font-family: 'Fredoka One', cursive;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .instruction-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .bubble-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
 }
 
 @layer utilities {

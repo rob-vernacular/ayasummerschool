@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ActivityScene from '../../components/world/ActivityScene'
 import CompletionScreen from '../../components/ui/CompletionScreen'
-import { CheckIcon } from '../../components/icons'
+import { CheckIcon, SoundOnIcon } from '../../components/icons'
 import { useSound } from '../../hooks/useSound'
+import { useSpeech, speechSupported } from '../../hooks/useSpeech'
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5) }
 
@@ -32,6 +33,7 @@ export default function SentenceScramble({ onComplete }) {
   const [showHint, setShowHint] = useState(false)
   const [hintCount, setHintCount] = useState(0)
   const { correct: playCorrect, wrong: playWrong, storyComplete } = useSound(true)
+  const { speakWord, speakSentence } = useSpeech()
 
   useEffect(() => {
     const selected = shuffle(SENTENCES).slice(0, 6)
@@ -48,6 +50,7 @@ export default function SentenceScramble({ onComplete }) {
   }
 
   const handleTile = (tile) => {
+    speakWord(tile.word)
     setPlaced(prev => [...prev, tile])
     setAvailable(prev => prev.filter(t => t.id !== tile.id))
   }
@@ -111,7 +114,7 @@ export default function SentenceScramble({ onComplete }) {
           )}
           {placed.map(tile => (
             <motion.button key={tile.id}
-              className="text-white font-fredoka text-lg px-4 py-2 rounded-xl shadow-sm"
+              className="text-white font-fredoka text-2xl px-4 py-2 rounded-xl shadow-sm"
               style={{ background: 'linear-gradient(160deg,#9C5FD0,#7B1FA2)' }}
               whileTap={{ scale: 0.9 }} layout onClick={() => handleRemove(tile)}>{tile.word}</motion.button>
           ))}
@@ -130,20 +133,31 @@ export default function SentenceScramble({ onComplete }) {
         <div className="flex flex-wrap gap-3 justify-center w-full">
           {available.map(tile => (
             <motion.button key={tile.id}
-              className="font-fredoka text-xl px-5 py-3 rounded-xl shadow-card text-[#5a4322]"
+              className="font-fredoka text-2xl px-5 py-3 rounded-xl shadow-card text-[#5a4322]"
               style={{ background: 'linear-gradient(160deg,#E8D9A8,#C9B273)', border: '2px solid #A8924f' }}
               whileTap={{ scale: 0.9 }} layout onClick={() => handleTile(tile)}>{tile.word}</motion.button>
           ))}
         </div>
 
         {placed.length === round.words.length && (
-          <motion.button
-            className="btn-primary w-full flex items-center justify-center gap-2"
-            style={{ background: 'linear-gradient(135deg,#56C271,#2E7D32)' }}
-            whileTap={{ scale: 0.95 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            onClick={handleCheck}>
-            <CheckIcon size={24} circle={false} /> Check!
-          </motion.button>
+          <div className="w-full flex flex-col gap-3">
+            {speechSupported && (
+              <motion.button
+                className="w-full flex items-center justify-center gap-3 font-fredoka text-xl text-white py-3.5 rounded-2xl shadow-card"
+                style={{ background: 'linear-gradient(135deg,#4FC3F7,#1B6CA8)' }}
+                whileTap={{ scale: 0.96 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                onClick={() => speakSentence(placed.map(t => t.word).join(' '))}>
+                <SoundOnIcon size={24} /> Read it!
+              </motion.button>
+            )}
+            <motion.button
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg,#56C271,#2E7D32)' }}
+              whileTap={{ scale: 0.95 }} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              onClick={handleCheck}>
+              <CheckIcon size={24} circle={false} /> Check!
+            </motion.button>
+          </div>
         )}
       </div>
     </ActivityScene>

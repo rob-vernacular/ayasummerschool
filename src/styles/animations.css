@@ -95,6 +95,16 @@
   50%      { transform: rotate(8deg); }
 }
 
+@keyframes sound-wave {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+  50%      { transform: scaleY(1);   opacity: 1; }
+}
+
+@keyframes speaker-pulse {
+  0%, 100% { transform: scale(1);   box-shadow: 0 0 0 0 rgba(33,150,243,0.5); }
+  50%      { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(33,150,243,0); }
+}
+
 @keyframes sun-glow {
   0%, 100% { opacity: 0.55; transform: scale(1); }
   50%      { opacity: 0.85; transform: scale(1.08); }
@@ -127,6 +137,8 @@
 .anim-wag       { animation: wag 0.6s ease-in-out infinite;          will-change: transform; }
 .anim-wave      { animation: wave-move linear infinite;               will-change: transform; }
 .anim-glow-sun  { animation: sun-glow 5s ease-in-out infinite;        will-change: transform, opacity; }
+.anim-sound-wave    { animation: sound-wave 0.7s ease-in-out infinite; transform-origin: bottom; }
+.anim-speaker-pulse { animation: speaker-pulse 2s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   .anim-breathe, .anim-float, .anim-float-slow, .anim-palm-sway,

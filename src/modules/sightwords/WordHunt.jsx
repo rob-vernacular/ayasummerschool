@@ -149,7 +149,7 @@ export default function WordHunt({ onComplete, profile }) {
                   const fnd = isCellFound(r, c)
                   return (
                     <div key={c}
-                      className={`w-10 h-10 flex items-center justify-center font-fredoka text-lg
+                      className={`grid-letter w-11 h-11 flex items-center justify-center
                         rounded cursor-pointer select-none transition-colors
                         ${fnd ? 'bg-grass-dark text-white' : sel ? 'bg-gold text-[#6b4a12]' : 'text-[#5a4322] hover:bg-white/40'}`}
                       onPointerDown={() => handleCellStart(r, c)}
